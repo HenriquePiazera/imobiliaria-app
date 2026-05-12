@@ -1,17 +1,13 @@
-import Link from "next/link";
-
-export default function Home() {
+export default function DashboardPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <div className="flex flex-col gap-4">
-        <h1 className="text-3xl font-bold">
-          Imobiliária App
-        </h1>
+    <div>
+      <h1 className="text-3xl font-bold">
+        Bem-vindo ao Dashboard
+      </h1>
 
-        <Link href="/login">
-          Ir para login
-        </Link>
-      </div>
-    </main>
+      <p className="mt-4">
+        Sistema imobiliário iniciado com sucesso.
+      </p>
+    </div>
   );
 }
