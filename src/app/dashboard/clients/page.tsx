@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   createClient,
   deleteClient,
   getClients,
+  updateClient,
 } from "@/repositories/client.repository";
 
 import { Client } from "@/types/client";
@@ -14,32 +18,57 @@ import { ClientForm } from "@/components/clients/ClientForm";
 
 import { ClientList } from "@/components/clients/ClientList";
 
+import { ClientFormData } from "@/schemas/client.schema";
+
+import { ClientsSkeleton } from "@/components/clients/ClientsSkeleton";
+
 export default function ClientsPage() {
-  const [clients, setClients] = useState<
-    Client[]
-  >([]);
+  const [clients, setClients] =
+    useState<Client[]>([]);
+  
+  const [loading, setLoading] =
+    useState(true);  
+
+  const [
+    editingClient,
+    setEditingClient,
+  ] = useState<Client | null>(
+    null
+  );
 
   async function loadClients() {
-    const data = await getClients();
-
-    setClients(data);
+    try {
+      setLoading(true);
+  
+      const data =
+        await getClients();
+  
+      setClients(data);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
     loadClients();
   }, []);
 
-  async function handleCreateClient(
-    data: {
-      name: string;
-      email: string;
-      phone: string;
-    }
+  async function handleSubmit(
+    data: ClientFormData
   ) {
-    await createClient({
-      ...data,
-      createdAt: new Date(),
-    });
+    if (editingClient) {
+      await updateClient(
+        editingClient.id,
+        data
+      );
+
+      setEditingClient(null);
+    } else {
+      await createClient({
+        ...data,
+        createdAt: new Date(),
+      });
+    }
 
     loadClients();
   }
@@ -52,6 +81,12 @@ export default function ClientsPage() {
     loadClients();
   }
 
+  function handleEditClient(
+    client: Client
+  ) {
+    setEditingClient(client);
+  }
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">
@@ -59,17 +94,25 @@ export default function ClientsPage() {
       </h1>
 
       <ClientForm
-        onSubmit={
-          handleCreateClient
+        onSubmit={handleSubmit}
+        editingClient={
+          editingClient
         }
       />
 
-      <ClientList
-        clients={clients}
-        onDelete={
-          handleDeleteClient
-        }
-      />
+{loading ? (
+  <ClientsSkeleton />
+) : (
+  <ClientList
+    clients={clients}
+    onDelete={
+      handleDeleteClient
+    }
+    onEdit={
+      handleEditClient
+    }
+  />
+)}
     </div>
   );
 }

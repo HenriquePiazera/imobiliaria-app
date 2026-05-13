@@ -1,54 +1,75 @@
 "use client";
 
-import { useState } from "react";
+import { toast } from "sonner";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import { useForm } from "react-hook-form";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import {
+  clientSchema,
+  ClientFormData,
+} from "@/schemas/client.schema";
+
+import { Client } from "@/types/client";
 
 type ClientFormProps = {
   onSubmit: (
-    data: {
-      name: string;
-      email: string;
-      phone: string;
-    }
+    data: ClientFormData
   ) => Promise<void>;
+
+  editingClient: Client | null;
 };
 
 export function ClientForm({
   onSubmit,
+  editingClient,
 }: ClientFormProps) {
-  const [name, setName] =
-    useState("");
-
-  const [email, setEmail] =
-    useState("");
-
-  const [phone, setPhone] =
-    useState("");
-
   const [loading, setLoading] =
     useState(false);
 
-  async function handleSubmit() {
-    if (!name || !email || !phone) {
-      alert("Preencha todos os campos");
+  const {
+    register,
+    handleSubmit,
+    reset,
+  } = useForm<ClientFormData>({
+    resolver:
+      zodResolver(clientSchema),
+  });
 
-      return;
+  useEffect(() => {
+    if (editingClient) {
+      reset({
+        name: editingClient.name,
+        email: editingClient.email,
+        phone: editingClient.phone,
+      });
     }
+  }, [editingClient, reset]);
 
+  async function handleFormSubmit(
+    data: ClientFormData
+  ) {
     try {
       setLoading(true);
 
-      await onSubmit({
-        name,
-        email,
-        phone,
-      });
+      await onSubmit(data);
 
-      setName("");
-      setEmail("");
-      setPhone("");
+      toast.success(
+        editingClient
+          ? "Cliente atualizado"
+          : "Cliente cadastrado"
+      );
+
+      reset();
     } catch {
-      alert(
-        "Erro ao cadastrar cliente"
+      toast.error(
+        "Erro ao salvar cliente"
       );
     } finally {
       setLoading(false);
@@ -56,39 +77,57 @@ export function ClientForm({
   }
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow space-y-4 max-w-xl">
+    <form
+      onSubmit={handleSubmit(
+        handleFormSubmit
+      )}
+      className="
+        bg-white
+        p-6
+        rounded-xl
+        shadow
+        space-y-4
+        max-w-xl
+      "
+    >
       <input
         type="text"
         placeholder="Nome"
-        value={name}
-        onChange={(e) =>
-          setName(e.target.value)
-        }
-        className="w-full border p-3 rounded"
+        {...register("name")}
+        className="
+          w-full
+          border
+          p-3
+          rounded
+        "
       />
 
       <input
         type="email"
         placeholder="Email"
-        value={email}
-        onChange={(e) =>
-          setEmail(e.target.value)
-        }
-        className="w-full border p-3 rounded"
+        {...register("email")}
+        className="
+          w-full
+          border
+          p-3
+          rounded
+        "
       />
 
       <input
         type="text"
         placeholder="Telefone"
-        value={phone}
-        onChange={(e) =>
-          setPhone(e.target.value)
-        }
-        className="w-full border p-3 rounded"
+        {...register("phone")}
+        className="
+          w-full
+          border
+          p-3
+          rounded
+        "
       />
 
       <button
-        onClick={handleSubmit}
+        type="submit"
         disabled={loading}
         className="
           bg-zinc-900
@@ -96,13 +135,14 @@ export function ClientForm({
           px-4
           py-3
           rounded-lg
-          disabled:opacity-50
         "
       >
         {loading
-          ? "Cadastrando..."
+          ? "Salvando..."
+          : editingClient
+          ? "Atualizar Cliente"
           : "Cadastrar Cliente"}
       </button>
-    </div>
+    </form>
   );
 }
