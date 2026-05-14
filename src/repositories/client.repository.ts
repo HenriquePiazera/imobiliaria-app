@@ -3,7 +3,7 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDocs,
+  onSnapshot,
   updateDoc,
 } from "firebase/firestore";
 
@@ -23,17 +23,6 @@ export async function createClient(
     clientsCollection,
     client
   );
-}
-
-export async function getClients() {
-  const snapshot = await getDocs(
-    clientsCollection
-  );
-
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Client[];
 }
 
 export async function updateClient(
@@ -62,4 +51,22 @@ export async function deleteClient(
   );
 
   return await deleteDoc(clientDoc);
+}
+
+export function subscribeToClients(
+  callback: (clients: Client[]) => void
+) {
+  return onSnapshot(
+    clientsCollection,
+    (snapshot) => {
+      const clients = snapshot.docs.map(
+        (doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })
+      ) as Client[];
+
+      callback(clients);
+    }
+  );
 }

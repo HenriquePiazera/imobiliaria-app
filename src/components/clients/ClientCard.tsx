@@ -1,75 +1,54 @@
-"use client";
-
 import { Client } from "@/types/client";
+
+import { Card } from "@/components/ui/Card";
+
+import { Button } from "@/components/ui/Button";
 
 type ClientCardProps = {
   client: Client;
 
-  onDelete: (id: string) => void;
-
   onEdit: (client: Client) => void;
+
+  onDelete: (id: string) => void;
 };
 
 export function ClientCard({
   client,
-  onDelete,
   onEdit,
+  onDelete,
 }: ClientCardProps) {
   return (
-    <div
-      className="
-        bg-white
-        p-4
-        rounded-xl
-        shadow
-        flex
-        items-center
-        justify-between
-      "
-    >
-      <div>
-        <h2 className="font-bold">
+    <Card>
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold">
           {client.name}
         </h2>
 
-        <p>{client.email}</p>
+        <p className="text-zinc-600">
+          {client.email}
+        </p>
 
-        <p>{client.phone}</p>
+        <p className="text-zinc-600">
+          {client.phone}
+        </p>
+
+        <div className="flex gap-2 pt-4">
+          <Button
+            onClick={() => onEdit(client)}
+          >
+            Editar
+          </Button>
+
+          <Button
+            onClick={() =>
+              onDelete(client.id)
+            }
+            className="bg-red-600 hover:bg-red-500"
+          >
+            Excluir
+          </Button>
+        </div>
       </div>
-
-      <div className="flex gap-2">
-        <button
-          onClick={() =>
-            onEdit(client)
-          }
-          className="
-            bg-blue-500
-            hover:bg-blue-600
-            text-white
-            px-4
-            py-2
-            rounded-lg
-          "
-        >
-          Editar
-        </button>
-
-        <button
-          onClick={() =>
-            onDelete(client.id)
-          }
-          className="
-            bg-red-500
-            hover:bg-red-600
-            text-white
-            px-4
-            py-2
-            rounded-lg
-          "
-        >
-          Excluir
-        </button>
-      </div>
-    </div>
+    </Card>
   );
 }

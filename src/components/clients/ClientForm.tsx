@@ -18,6 +18,12 @@ import {
 
 import { Client } from "@/types/client";
 
+import { Button } from "@/components/ui/Button";
+
+import { Input } from "@/components/ui/Input";
+
+import { Card } from "@/components/ui/Card";
+
 type ClientFormProps = {
   onSubmit: (
     data: ClientFormData
@@ -67,82 +73,52 @@ export function ClientForm({
       );
 
       reset();
+
     } catch {
       toast.error(
         "Erro ao salvar cliente"
       );
+
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(
-        handleFormSubmit
-      )}
-      className="
-        bg-white
-        p-6
-        rounded-xl
-        shadow
-        space-y-4
-        max-w-xl
-      "
-    >
-      <input
-        type="text"
-        placeholder="Nome"
-        {...register("name")}
-        className="
-          w-full
-          border
-          p-3
-          rounded
-        "
-      />
-
-      <input
-        type="email"
-        placeholder="Email"
-        {...register("email")}
-        className="
-          w-full
-          border
-          p-3
-          rounded
-        "
-      />
-
-      <input
-        type="text"
-        placeholder="Telefone"
-        {...register("phone")}
-        className="
-          w-full
-          border
-          p-3
-          rounded
-        "
-      />
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="
-          bg-zinc-900
-          text-white
-          px-4
-          py-3
-          rounded-lg
-        "
+    <Card>
+      <form
+        onSubmit={handleSubmit(
+          handleFormSubmit
+        )}
+        className="space-y-4"
       >
-        {loading
-          ? "Salvando..."
-          : editingClient
-          ? "Atualizar Cliente"
-          : "Cadastrar Cliente"}
-      </button>
-    </form>
+        <Input
+          type="text"
+          placeholder="Nome"
+          {...register("name")}
+        />
+
+        <Input
+          type="email"
+          placeholder="Email"
+          {...register("email")}
+        />
+
+        <Input
+          type="text"
+          placeholder="Telefone"
+          {...register("phone")}
+        />
+
+        <Button
+          type="submit"
+          loading={loading}
+        >
+          {editingClient
+            ? "Atualizar Cliente"
+            : "Cadastrar Cliente"}
+        </Button>
+      </form>
+    </Card>
   );
 }

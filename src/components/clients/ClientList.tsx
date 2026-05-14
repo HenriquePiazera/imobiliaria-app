@@ -1,38 +1,45 @@
-"use client";
-
 import { Client } from "@/types/client";
 
 import { ClientCard } from "./ClientCard";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+
 type ClientListProps = {
   clients: Client[];
 
-  onDelete: (id: string) => void;
-
   onEdit: (client: Client) => void;
+
+  onDelete: (id: string) => void;
 };
 
 export function ClientList({
   clients,
-  onDelete,
   onEdit,
+  onDelete,
 }: ClientListProps) {
-  if (clients.length === 0) {
+  if (!clients.length) {
     return (
-      <p>
-        Nenhum cliente cadastrado.
-      </p>
+      <EmptyState
+        message="Nenhum cliente cadastrado."
+      />
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div
+      className="
+        grid
+        grid-cols-1
+        md:grid-cols-2
+        gap-4
+      "
+    >
       {clients.map((client) => (
         <ClientCard
           key={client.id}
           client={client}
-          onDelete={onDelete}
           onEdit={onEdit}
+          onDelete={onDelete}
         />
       ))}
     </div>
