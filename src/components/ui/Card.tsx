@@ -11,9 +11,10 @@ export function Card({
     <div
       className="
         bg-white
-        rounded-xl
-        shadow
-        p-6
+        border
+        rounded-2xl
+        p-5
+        shadow-sm
       "
     >
       {children}

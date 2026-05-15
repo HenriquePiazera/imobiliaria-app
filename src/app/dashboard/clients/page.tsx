@@ -8,7 +8,7 @@ import {
 import {
   createClient,
   deleteClient,
-  getClients,
+  subscribeToClients,
   updateClient,
 } from "@/repositories/client.repository";
 
@@ -25,9 +25,9 @@ import { ClientsSkeleton } from "@/components/clients/ClientsSkeleton";
 export default function ClientsPage() {
   const [clients, setClients] =
     useState<Client[]>([]);
-  
+
   const [loading, setLoading] =
-    useState(true);  
+    useState(true);
 
   const [
     editingClient,
@@ -36,21 +36,17 @@ export default function ClientsPage() {
     null
   );
 
-  async function loadClients() {
-    try {
-      setLoading(true);
-  
-      const data =
-        await getClients();
-  
-      setClients(data);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    loadClients();
+    const unsubscribe =
+      subscribeToClients(
+        (clients) => {
+          setClients(clients);
+
+          setLoading(false);
+        }
+      );
+
+    return () => unsubscribe();
   }, []);
 
   async function handleSubmit(
@@ -66,19 +62,16 @@ export default function ClientsPage() {
     } else {
       await createClient({
         ...data,
-        createdAt: new Date(),
+        createdAt:
+          new Date().toISOString(),
       });
     }
-
-    loadClients();
   }
 
   async function handleDeleteClient(
     id: string
   ) {
     await deleteClient(id);
-
-    loadClients();
   }
 
   function handleEditClient(
@@ -100,19 +93,19 @@ export default function ClientsPage() {
         }
       />
 
-{loading ? (
-  <ClientsSkeleton />
-) : (
-  <ClientList
-    clients={clients}
-    onDelete={
-      handleDeleteClient
-    }
-    onEdit={
-      handleEditClient
-    }
-  />
-)}
+      {loading ? (
+        <ClientsSkeleton />
+      ) : (
+        <ClientList
+          clients={clients}
+          onDelete={
+            handleDeleteClient
+          }
+          onEdit={
+            handleEditClient
+          }
+        />
+      )}
     </div>
   );
 }

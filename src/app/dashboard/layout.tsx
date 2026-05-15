@@ -1,8 +1,12 @@
+"use client";
+
 import { ReactNode } from "react";
 
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedRoute }
+from "@/components/auth/ProtectedRoute";
 
-import { DashboardShell } from "@/components/layout/DashboardShell";
+import { DashboardShell }
+from "@/components/layout/DashboardShell";
 
 type DashboardLayoutProps = {
   children: ReactNode;

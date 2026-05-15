@@ -1,22 +1,37 @@
 import { z } from "zod";
 
-export const propertySchema = z.object({
-  title: z
-    .string()
-    .min(3, "Título obrigatório"),
+export const propertySchema =
+  z.object({
+    title: z
+      .string()
+      .min(3),
 
-  price: z.coerce
-    .number()
-    .min(1, "Preço obrigatório"),
+    price: z.coerce
+      .number()
+      .min(1),
 
-  address: z
-    .string()
-    .min(5, "Endereço obrigatório"),
+    type: z
+      .string()
+      .min(2),
 
-  bedrooms: z.coerce.number(),
+    city: z
+      .string()
+      .min(2),
 
-  bathrooms: z.coerce.number(),
-});
+    bedrooms: z.coerce
+      .number()
+      .min(0),
+
+    bathrooms: z.coerce
+      .number()
+      .min(0),
+
+    area: z.coerce
+      .number()
+      .min(1),
+  });
 
 export type PropertyFormData =
-  z.infer<typeof propertySchema>;
+  z.infer<
+    typeof propertySchema
+  >;

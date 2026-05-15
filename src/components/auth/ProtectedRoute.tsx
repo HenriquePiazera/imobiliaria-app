@@ -4,7 +4,8 @@ import { ReactNode, useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth }
+from "@/contexts/AuthContext";
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -13,7 +14,10 @@ type ProtectedRouteProps = {
 export function ProtectedRoute({
   children,
 }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const {
+    user,
+    loading,
+  } = useAuth();
 
   const router = useRouter();
 
@@ -25,7 +29,14 @@ export function ProtectedRoute({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div
+        className="
+          flex
+          items-center
+          justify-center
+          min-h-screen
+        "
+      >
         <p>Carregando...</p>
       </div>
     );
