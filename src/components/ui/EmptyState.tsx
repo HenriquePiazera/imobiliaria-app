@@ -1,8 +1,7 @@
-type EmptyStateProps = {
+interface EmptyStateProps {
   title: string;
-
   description: string;
-};
+}
 
 export function EmptyState({
   title,
@@ -11,12 +10,12 @@ export function EmptyState({
   return (
     <div
       className="
+        bg-white
         border
-        border-dashed
         rounded-2xl
         p-10
         text-center
-        bg-white
+        shadow-sm
       "
     >
       <h2

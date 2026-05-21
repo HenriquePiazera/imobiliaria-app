@@ -21,8 +21,10 @@ type AuthContextType = {
   logout: () => Promise<void>;
 };
 
-const AuthContext =
-  createContext<AuthContextType | null>(null);
+export const AuthContext =
+  createContext<AuthContextType | null>(
+    null
+  );
 
 type AuthProviderProps = {
   children: React.ReactNode;
@@ -52,11 +54,7 @@ export function AuthProvider({
   }, []);
 
   async function logout() {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error(error);
-    }
+    await signOut(auth);
   }
 
   return (

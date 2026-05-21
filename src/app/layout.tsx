@@ -9,8 +9,7 @@ import "./globals.css";
 
 import { Toaster } from "sonner";
 
-import { AuthProvider }
-from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

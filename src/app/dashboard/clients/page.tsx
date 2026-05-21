@@ -5,92 +5,87 @@ import {
   useState,
 } from "react";
 
-import {
-  createClient,
-  deleteClient,
-  subscribeToClients,
-  updateClient,
-} from "@/repositories/client.repository";
-
-import { Client } from "@/types/client";
+import { PageTitle } from "@/components/ui/PageTitle";
 
 import { ClientForm } from "@/components/clients/ClientForm";
 
 import { ClientList } from "@/components/clients/ClientList";
 
-import { ClientFormData } from "@/schemas/client.schema";
-
 import { ClientsSkeleton } from "@/components/clients/ClientsSkeleton";
 
+import { Client } from "@/types/client";
+
+import { ClientFormData } from "@/schemas/client.schema";
+
+import { ClientRepository } from "@/repositories/clients/client.repository";
+
+const clientRepository = new ClientRepository();
+
 export default function ClientsPage() {
-  const [clients, setClients] =
-    useState<Client[]>([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [
-    editingClient,
-    setEditingClient,
-  ] = useState<Client | null>(
-    null
-  );
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
 
   useEffect(() => {
-    const unsubscribe =
-      subscribeToClients(
-        (clients) => {
-          setClients(clients);
+    async function loadClients() {
+      try {
+        const data = await clientRepository.getClients();
+        setClients(data);
+      } catch (error) {
+        console.error("Erro ao carregar clientes:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-          setLoading(false);
-        }
-      );
-
-    return () => unsubscribe();
+    loadClients();
   }, []);
 
-  async function handleSubmit(
-    data: ClientFormData
-  ) {
-    if (editingClient) {
-      await updateClient(
-        editingClient.id,
-        data
-      );
+  async function handleSubmit(data: ClientFormData) {
+    try {
+      if (editingClient) {
+        await clientRepository.updateClient(editingClient.id, data);
+        setEditingClient(null);
+      } else {
+        await clientRepository.createClient({
+          ...data,
+          createdAt: new Date().toISOString(),
+        } as Omit<Client, "id">);
 
-      setEditingClient(null);
-    } else {
-      await createClient({
-        ...data,
-        createdAt:
-          new Date().toISOString(),
-      });
+        const updated = await clientRepository.getClients();
+        setClients(updated);
+      }
+    } catch (error) {
+      console.error("Erro ao salvar cliente:", error);
     }
   }
 
-  async function handleDeleteClient(
-    id: string
-  ) {
-    await deleteClient(id);
+  async function handleDeleteClient(id: string) {
+    try {
+      await clientRepository.deleteClient(id);
+
+      setClients((prev) =>
+        prev.filter((client) => client.id !== id)
+      );
+    } catch (error) {
+      console.error("Erro ao excluir cliente:", error);
+    }
   }
 
-  function handleEditClient(
-    client: Client
-  ) {
+  function handleEditClient(client: Client) {
     setEditingClient(client);
   }
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold">
-        Clientes
-      </h1>
+      <PageTitle
+        title="Clientes"
+        subtitle="Gerencie os clientes cadastrados"
+      />
 
       <ClientForm
         onSubmit={handleSubmit}
-        editingClient={
-          editingClient
-        }
+        editingClient={editingClient}
       />
 
       {loading ? (
@@ -98,12 +93,8 @@ export default function ClientsPage() {
       ) : (
         <ClientList
           clients={clients}
-          onDelete={
-            handleDeleteClient
-          }
-          onEdit={
-            handleEditClient
-          }
+          onDelete={handleDeleteClient}
+          onEdit={handleEditClient}
         />
       )}
     </div>

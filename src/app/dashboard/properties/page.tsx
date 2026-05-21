@@ -10,7 +10,7 @@ import {
   deleteProperty,
   subscribeToProperties,
   updateProperty,
-} from "@/repositories/property.repository";
+} from "@/repositories/properties/property.repository";
 
 import { Property } from "@/types/property";
 
@@ -21,6 +21,14 @@ import {
 import {
   PropertyForm,
 } from "@/components/properties/PropertyForm";
+
+import {
+  PropertyCard,
+} from "@/components/properties/PropertyCard";
+
+import {
+  EmptyState,
+} from "@/components/ui/EmptyState";
 
 export default function PropertiesPage() {
   const [
@@ -56,26 +64,47 @@ export default function PropertiesPage() {
   async function handleSubmit(
     data: PropertyFormData
   ) {
-    if (editingProperty) {
-      await updateProperty(
-        editingProperty.id,
-        data
-      );
+    try {
+      if (editingProperty) {
+        await updateProperty(
+          editingProperty.id,
+          data
+        );
 
-      setEditingProperty(null);
-    } else {
-      await createProperty({
-        ...data,
-        createdAt:
-          new Date().toISOString(),
-      });
+        setEditingProperty(null);
+      } else {
+        await createProperty({
+          ...data,
+          createdAt:
+            new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      console.error(
+        "Erro ao salvar imóvel:",
+        error
+      );
     }
   }
 
   async function handleDelete(
     id: string
   ) {
-    await deleteProperty(id);
+    const confirmed =
+      window.confirm(
+        "Deseja excluir este imóvel?"
+      );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteProperty(id);
+    } catch (error) {
+      console.error(
+        "Erro ao excluir imóvel:",
+        error
+      );
+    }
   }
 
   function handleEdit(
@@ -110,6 +139,12 @@ export default function PropertiesPage() {
 
       {loading ? (
         <p>Carregando...</p>
+      ) : properties.length ===
+        0 ? (
+        <EmptyState
+          title="Nenhum imóvel cadastrado"
+          description="Cadastre o primeiro imóvel para começar."
+        />
       ) : (
         <div
           className="
@@ -122,139 +157,16 @@ export default function PropertiesPage() {
         >
           {properties.map(
             (property) => (
-              <div
+              <PropertyCard
                 key={property.id}
-                className="
-                  bg-white
-                  border
-                  rounded-2xl
-                  p-5
-                  shadow-sm
-                  space-y-4
-                "
-              >
-                <div>
-                  <h2
-                    className="
-                      text-xl
-                      font-semibold
-                    "
-                  >
-                    {
-                      property.title
-                    }
-                  </h2>
-
-                  <p
-                    className="
-                      text-zinc-500
-                    "
-                  >
-                    {property.city}
-                  </p>
-                </div>
-
-                <div
-                  className="
-                    grid
-                    grid-cols-2
-                    gap-3
-                    text-sm
-                  "
-                >
-                  <div>
-                    <strong>
-                      Tipo:
-                    </strong>{" "}
-                    {
-                      property.type
-                    }
-                  </div>
-
-                  <div>
-                    <strong>
-                      Área:
-                    </strong>{" "}
-                    {
-                      property.area
-                    }
-                    m²
-                  </div>
-
-                  <div>
-                    <strong>
-                      Quartos:
-                    </strong>{" "}
-                    {
-                      property.bedrooms
-                    }
-                  </div>
-
-                  <div>
-                    <strong>
-                      Banheiros:
-                    </strong>{" "}
-                    {
-                      property.bathrooms
-                    }
-                  </div>
-                </div>
-
-                <div>
-                  <p
-                    className="
-                      text-2xl
-                      font-bold
-                    "
-                  >
-                    R${" "}
-                    {property.price.toLocaleString(
-                      "pt-BR"
-                    )}
-                  </p>
-                </div>
-
-                <div
-                  className="
-                    flex
-                    gap-3
-                  "
-                >
-                  <button
-                    onClick={() =>
-                      handleEdit(
-                        property
-                      )
-                    }
-                    className="
-                      bg-blue-600
-                      text-white
-                      px-4
-                      py-2
-                      rounded-lg
-                    "
-                  >
-                    Editar
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      handleDelete(
-                        property.id
-                      )
-                    }
-                    className="
-                      bg-red-600
-                      text-white
-                      px-4
-                      py-2
-                      rounded-lg
-                    "
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </div>
+                property={property}
+                onEdit={
+                  handleEdit
+                }
+                onDelete={
+                  handleDelete
+                }
+              />
             )
           )}
         </div>
