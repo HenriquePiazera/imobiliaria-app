@@ -1,18 +1,57 @@
-export default function DashboardPage() {
+import Link from "next/link";
+
+export default function HomePage() {
   return (
-    <section>
+    <main
+      className="
+        flex
+        min-h-screen
+        flex-col
+        items-center
+        justify-center
+        gap-6
+      "
+    >
       <h1
         className="
-          text-3xl
+          text-4xl
           font-bold
         "
       >
-        Dashboard
+        Imobiliária App
       </h1>
 
-      <p className="mt-4">
-        Bem-vindo ao sistema imobiliário.
+      <p className="text-zinc-500">
+        CRM imobiliário desenvolvido com
+        Next.js + Firebase
       </p>
-    </section>
+
+      <div className="flex gap-4">
+        <Link
+          href="/login"
+          className="
+            rounded
+            bg-black
+            px-6
+            py-3
+            text-white
+          "
+        >
+          Login
+        </Link>
+
+        <Link
+          href="/register"
+          className="
+            rounded
+            border
+            px-6
+            py-3
+          "
+        >
+          Criar conta
+        </Link>
+      </div>
+    </main>
   );
 }
