@@ -2,18 +2,15 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  getAuth,
 } from "firebase/auth";
 
-import { app } from "@/lib/firebase";
-
-const auth = getAuth(app);
+import { auth } from "@/lib/firebase";
 
 export async function registerUser(
   email: string,
   password: string
 ) {
-  return createUserWithEmailAndPassword(
+  return await createUserWithEmailAndPassword(
     auth,
     email,
     password
@@ -24,7 +21,7 @@ export async function loginUser(
   email: string,
   password: string
 ) {
-  return signInWithEmailAndPassword(
+  return await signInWithEmailAndPassword(
     auth,
     email,
     password
@@ -32,7 +29,5 @@ export async function loginUser(
 }
 
 export async function logoutUser() {
-  return signOut(auth);
+  return await signOut(auth);
 }
-
-export { auth };
