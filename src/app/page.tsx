@@ -1,161 +1,58 @@
- feature/properties-module
-export default function DashboardPage() {
-  return (
-    <section>
-      <h1
-        className="
-          text-3xl
-          font-bold
-        "
-      >
-        Dashboard
-      </h1>
+import Link from "next/link";
 
-      <p className="mt-4">
-        Bem-vindo ao sistema imobiliário.
-      </p>
-    </section>
-
-"use client";
-
-import { useState } from "react";
-
-import {
-  registerUser,
-  loginUser,
-} from "@/services/auth.service";
-
-export default function AuthPage() {
-  const [isLogin, setIsLogin] =
-    useState(true);
-
-  const [email, setEmail] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
-  async function handleSubmit() {
-    try {
-      if (isLogin) {
-        await loginUser(
-          email,
-          password
-        );
-
-        alert(
-          "Login realizado com sucesso"
-        );
-      } else {
-        await registerUser(
-          email,
-          password
-        );
-
-        alert(
-          "Conta criada com sucesso"
-        );
-      }
-    } catch (error) {
-      console.error(error);
-
-      alert(
-        "Erro na autenticação"
-      );
-    }
-  }
-
+export default function HomePage() {
   return (
     <main
       className="
         flex
         min-h-screen
+        flex-col
         items-center
         justify-center
+        gap-6
       "
     >
-      <div
+      <h1
         className="
-          w-full
-          max-w-md
-          space-y-4
-          p-6
+          text-4xl
+          font-bold
+          text-black
         "
       >
-        <h1
-          className="
-            text-2xl
-            font-bold
-          "
-        >
-          {isLogin
-            ? "Entrar"
-            : "Criar conta"}
-        </h1>
+        Imobiliária App
+      </h1>
 
-        <input
-          type="email"
-          placeholder="E-mail"
-          value={email}
-          onChange={(e) =>
-            setEmail(
-              e.target.value
-            )
-          }
-          className="
-            w-full
-            rounded
-            border
-            p-3
-          "
-        />
+      <p className="text-zinc-500">
+        CRM imobiliário desenvolvido com
+        Next.js + Firebase
+      </p>
 
-        <input
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) =>
-            setPassword(
-              e.target.value
-            )
-          }
+      <div className="flex gap-4">
+        <Link
+          href="/login"
           className="
-            w-full
-            rounded
-            border
-            p-3
-          "
-        />
-
-        <button
-          onClick={handleSubmit}
-          className="
-            w-full
             rounded
             bg-black
-            p-3
+            px-6
+            py-3
             text-white
           "
         >
-          {isLogin
-            ? "Entrar"
-            : "Cadastrar"}
-        </button>
+          Login
+        </Link>
 
-        <button
-          onClick={() =>
-            setIsLogin(
-              !isLogin
-            )
-          }
-          className="w-full"
+        <Link
+          href="/register"
+          className="
+            rounded
+            border
+            px-6
+            py-3
+          "
         >
-          {isLogin
-            ? "Criar uma conta"
-            : "Já tenho conta"}
-        </button>
+          Criar conta
+        </Link>
       </div>
     </main>
- master
   );
 }
