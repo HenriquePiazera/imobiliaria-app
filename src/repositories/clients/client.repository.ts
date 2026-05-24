@@ -4,6 +4,8 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  orderBy,
+  query,
   updateDoc,
 } from "firebase/firestore";
 
@@ -15,7 +17,12 @@ const clientsCollection = collection(db, "clients");
 
 export class ClientRepository {
   async getClients(): Promise<Client[]> {
-    const snapshot = await getDocs(clientsCollection);
+    const q = query(
+      clientsCollection,
+      orderBy("createdAt", "desc")
+    );
+
+    const snapshot = await getDocs(q);
 
     return snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -23,17 +30,38 @@ export class ClientRepository {
     })) as Client[];
   }
 
-  async createClient(data: Omit<Client, "id">) {
-    return await addDoc(clientsCollection, data);
+  async createClient(
+    data: Omit<Client, "id">
+  ) {
+    return await addDoc(
+      clientsCollection,
+      data
+    );
   }
 
-  async updateClient(id: string, data: Partial<Client>) {
-    const clientDoc = doc(db, "clients", id);
-    return await updateDoc(clientDoc, data);
+  async updateClient(
+    id: string,
+    data: Partial<Client>
+  ) {
+    const clientDoc = doc(
+      db,
+      "clients",
+      id
+    );
+
+    return await updateDoc(
+      clientDoc,
+      data
+    );
   }
 
   async deleteClient(id: string) {
-    const clientDoc = doc(db, "clients", id);
+    const clientDoc = doc(
+      db,
+      "clients",
+      id
+    );
+
     return await deleteDoc(clientDoc);
   }
 }

@@ -11,6 +11,14 @@ export const clientSchema = z.object({
   phone: z
     .string()
     .min(8, "Telefone inválido"),
+
+  document: z
+    .string()
+    .min(11, "CPF/CNPJ inválido"),
+
+  address: z
+    .string()
+    .min(5, "Endereço inválido"),
 });
 
 export type ClientFormData =
