@@ -14,7 +14,9 @@ import { ClientList } from "@/components/clients/ClientList";
 
 import { ClientsSkeleton } from "@/components/clients/ClientsSkeleton";
 
-import { ClientFilters } from "@/components/clients/ClientFilters";
+import { ClientsStats } from "@/components/clients/ClientsStats";
+
+import { Input } from "@/components/ui/Input";
 
 import { Client } from "@/types/client";
 
@@ -35,10 +37,8 @@ export default function ClientsPage() {
   const [search, setSearch] =
     useState("");
 
-  const [
-    editingClient,
-    setEditingClient,
-  ] = useState<Client | null>(null);
+  const [editingClient, setEditingClient] =
+    useState<Client | null>(null);
 
   useEffect(() => {
     async function loadClients() {
@@ -74,8 +74,7 @@ export default function ClientsPage() {
 
         setClients((prev) =>
           prev.map((client) =>
-            client.id ===
-            editingClient.id
+            client.id === editingClient.id
               ? {
                   ...client,
                   ...data,
@@ -89,10 +88,6 @@ export default function ClientsPage() {
       } else {
         await clientRepository.createClient({
           ...data,
-
-          notes:
-            data.notes || "",
-
           createdAt:
             new Date().toISOString(),
         } as Omit<Client, "id">);
@@ -115,14 +110,11 @@ export default function ClientsPage() {
     id: string
   ) {
     try {
-      await clientRepository.deleteClient(
-        id
-      );
+      await clientRepository.deleteClient(id);
 
       setClients((prev) =>
         prev.filter(
-          (client) =>
-            client.id !== id
+          (client) => client.id !== id
         )
       );
 
@@ -140,29 +132,61 @@ export default function ClientsPage() {
     setEditingClient(client);
   }
 
-  const filteredClients =
-    useMemo(() => {
-      return clients.filter(
-        (client) => {
-          const searchValue =
-            search.toLowerCase();
+  const filteredClients = useMemo(() => {
+    const searchLower =
+      search.toLowerCase();
 
-          return (
-            (client.name || "")
-              .toLowerCase()
-              .includes(
-                searchValue
-              ) ||
+    return clients.filter((client) => {
+      const name =
+        client.name?.toLowerCase() || "";
 
-            (client.document || "")
-              .toLowerCase()
-              .includes(
-                searchValue
-              )
-          );
-        }
+      const email =
+        client.email?.toLowerCase() || "";
+
+      const phone =
+        client.phone?.toLowerCase() || "";
+
+      const document =
+        client.document?.toLowerCase() || "";
+
+      const city =
+        client.city?.toLowerCase() || "";
+
+      return (
+        name.includes(searchLower) ||
+        email.includes(searchLower) ||
+        phone.includes(searchLower) ||
+        document.includes(searchLower) ||
+        city.includes(searchLower)
       );
-    }, [clients, search]);
+    });
+  }, [clients, search]);
+
+  const totalClients =
+    clients.length;
+
+  const clientsWithDocument =
+    clients.filter(
+      (client) => client.document
+    ).length;
+
+  const clientsWithCity =
+    clients.filter(
+      (client) => client.city
+    ).length;
+
+  const clientsCreatedToday =
+    clients.filter((client) => {
+      const today =
+        new Date().toDateString();
+
+      const createdAt =
+        new Date(
+          client.createdAt
+        ).toDateString();
+
+      return today === createdAt;
+    }).length;
 
   return (
     <div className="space-y-8">
@@ -171,36 +195,44 @@ export default function ClientsPage() {
         subtitle="Gerencie os clientes cadastrados"
       />
 
-      <ClientForm
-        onSubmit={handleSubmit}
-        editingClient={
-          editingClient
+      <ClientsStats
+        totalClients={totalClients}
+        clientsWithDocument={
+          clientsWithDocument
+        }
+        clientsWithCity={
+          clientsWithCity
+        }
+        clientsCreatedToday={
+          clientsCreatedToday
         }
       />
 
-      <ClientFilters
-        search={search}
-        onSearchChange={
-          setSearch
-        }
-        totalClients={
-          filteredClients.length
-        }
+      <ClientForm
+        onSubmit={handleSubmit}
+        editingClient={editingClient}
       />
+
+      <div>
+        <Input
+          type="text"
+          placeholder="Buscar por nome, email, telefone, CPF ou cidade..."
+          value={search}
+          onChange={(e) =>
+            setSearch(e.target.value)
+          }
+        />
+      </div>
 
       {loading ? (
         <ClientsSkeleton />
       ) : (
         <ClientList
-          clients={
-            filteredClients
-          }
+          clients={filteredClients}
           onDelete={
             handleDeleteClient
           }
-          onEdit={
-            handleEditClient
-          }
+          onEdit={handleEditClient}
         />
       )}
     </div>
