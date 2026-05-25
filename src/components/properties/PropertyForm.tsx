@@ -1,86 +1,52 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
-  useEffect,
-  useState,
-} from "react";
+  useForm,
+  SubmitHandler,
+} from "react-hook-form";
+
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { toast } from "sonner";
 
 import {
-  useForm,
-} from "react-hook-form";
-
-import { z } from "zod";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-
-import {
-  getDownloadURL,
-  ref,
-  uploadBytes,
-} from "firebase/storage";
-
-import { storage } from "@/lib/firebase";
-
-import {
   propertySchema,
+  PropertyFormData,
 } from "@/schemas/property.schema";
 
 import { Property } from "@/types/property";
 
-type PropertyFormData = z.infer<
-  typeof propertySchema
->;
+import { Input } from "@/components/ui/Input";
 
-type PropertyFormInput = z.input<
-  typeof propertySchema
->;
+import { Button } from "@/components/ui/Button";
+
+import { Card } from "@/components/ui/Card";
 
 type PropertyFormProps = {
   onSubmit: (
-    data: PropertyFormData & {
-      imageUrl?: string;
-    }
+    data: PropertyFormData
   ) => Promise<void>;
 
-  editingProperty:
-    | Property
-    | null;
+  editingProperty?: Property | null;
 };
 
 export function PropertyForm({
   onSubmit,
-  editingProperty,
+  editingProperty = null,
 }: PropertyFormProps) {
   const [loading, setLoading] =
     useState(false);
-
-  const [imageFile, setImageFile] =
-    useState<File | null>(null);
 
   const {
     register,
     handleSubmit,
     reset,
-  } = useForm<
-    PropertyFormInput,
-    unknown,
-    PropertyFormData
-  >({
-    resolver:
-      zodResolver(propertySchema),
-
-    defaultValues: {
-      title: "",
-      type: "",
-      city: "",
-      price: 0,
-      area: 0,
-      bedrooms: 0,
-      bathrooms: 0,
-      status: "available",
-    },
+  } = useForm<PropertyFormData>({
+    resolver: zodResolver(
+      propertySchema
+    ) as any,
   });
 
   useEffect(() => {
@@ -92,69 +58,34 @@ export function PropertyForm({
         type:
           editingProperty.type,
 
-        city:
-          editingProperty.city,
+        purpose:
+          editingProperty.purpose,
 
         price:
           editingProperty.price,
 
-        area:
-          editingProperty.area,
+        city:
+          editingProperty.city,
 
-        bedrooms:
-          editingProperty.bedrooms,
-
-        bathrooms:
-          editingProperty.bathrooms,
+        district:
+          editingProperty.district,
 
         status:
           editingProperty.status,
+
+        description:
+          editingProperty.description,
       });
     }
-  }, [
-    editingProperty,
-    reset,
-  ]);
+  }, [editingProperty, reset]);
 
-  async function uploadImage() {
-    if (!imageFile) return null;
-
-    const imageRef = ref(
-      storage,
-      `properties/${Date.now()}-${
-        imageFile.name
-      }`
-    );
-
-    await uploadBytes(
-      imageRef,
-      imageFile
-    );
-
-    return await getDownloadURL(
-      imageRef
-    );
-  }
-
-  async function handleFormSubmit(
-    data: PropertyFormData
-  ) {
+  const handleFormSubmit: SubmitHandler<
+    PropertyFormData
+  > = async (data) => {
     try {
       setLoading(true);
 
-      const uploadedImage =
-        await uploadImage();
-
-      await onSubmit({
-        ...data,
-
-        ...(uploadedImage
-          ? {
-              imageUrl:
-                uploadedImage,
-            }
-          : {}),
-      });
+      await onSubmit(data);
 
       toast.success(
         editingProperty
@@ -164,233 +95,112 @@ export function PropertyForm({
 
       reset();
 
-      setImageFile(null);
-    } catch (error) {
-      console.error(error);
-
+    } catch {
       toast.error(
         "Erro ao salvar imóvel"
       );
+
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <form
-      onSubmit={handleSubmit(
-        handleFormSubmit
-      )}
-      className="
-        bg-white
-        border
-        rounded-2xl
-        p-6
-        grid
-        grid-cols-1
-        md:grid-cols-2
-        gap-4
-      "
-    >
-      <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Título
-        </label>
-
-        <input
-          placeholder="Casa alto padrão"
+    <Card>
+      <form
+        onSubmit={handleSubmit(
+          handleFormSubmit
+        )}
+        className="space-y-4"
+      >
+        <Input
+          placeholder="Título"
           {...register("title")}
-          className="
-            border
-            p-3
-            rounded-xl
-            w-full
-          "
         />
-      </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Tipo
-        </label>
-
-        <input
-          placeholder="Casa"
+        <Input
+          placeholder="Tipo"
           {...register("type")}
-          className="
-            border
-            p-3
-            rounded-xl
-            w-full
-          "
         />
-      </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Cidade
-        </label>
+        <select
+          {...register("purpose")}
+          className="
+            w-full
+            rounded-lg
+            border
+            border-zinc-300
+            px-3
+            py-2
+            text-sm
+          "
+        >
+          <option value="Venda">
+            Venda
+          </option>
 
-        <input
-          placeholder="São Paulo"
+          <option value="Aluguel">
+            Aluguel
+          </option>
+        </select>
+
+        <Input
+          type="number"
+          placeholder="Preço"
+          {...register("price", {
+            valueAsNumber: true,
+          })}
+        />
+
+        <Input
+          placeholder="Cidade"
           {...register("city")}
-          className="
-            border
-            p-3
-            rounded-xl
-            w-full
-          "
         />
-      </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Preço
-        </label>
-
-        <input
-          type="number"
-          placeholder="950000"
-          {...register("price")}
-          className="
-            border
-            p-3
-            rounded-xl
-            w-full
-          "
+        <Input
+          placeholder="Bairro"
+          {...register("district")}
         />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Área
-        </label>
-
-        <input
-          type="number"
-          placeholder="320"
-          {...register("area")}
-          className="
-            border
-            p-3
-            rounded-xl
-            w-full
-          "
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Quartos
-        </label>
-
-        <input
-          type="number"
-          placeholder="4"
-          {...register(
-            "bedrooms"
-          )}
-          className="
-            border
-            p-3
-            rounded-xl
-            w-full
-          "
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Banheiros
-        </label>
-
-        <input
-          type="number"
-          placeholder="3"
-          {...register(
-            "bathrooms"
-          )}
-          className="
-            border
-            p-3
-            rounded-xl
-            w-full
-          "
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Status
-        </label>
 
         <select
           {...register("status")}
           className="
-            border
-            p-3
-            rounded-xl
             w-full
+            rounded-lg
+            border
+            border-zinc-300
+            px-3
+            py-2
+            text-sm
           "
         >
-          <option value="available">
+          <option value="Disponível">
             Disponível
           </option>
 
-          <option value="rented">
+          <option value="Vendido">
+            Vendido
+          </option>
+
+          <option value="Alugado">
             Alugado
           </option>
-
-          <option value="reserved">
-            Reservado
-          </option>
-
-          <option value="inactive">
-            Inativo
-          </option>
         </select>
-      </div>
 
-      <div className="space-y-2 md:col-span-2">
-        <label className="text-sm font-medium">
-          Foto do imóvel
-        </label>
-
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) =>
-            setImageFile(
-              e.target.files?.[0] ||
-                null
-            )
-          }
-          className="
-            border
-            p-3
-            rounded-xl
-            w-full
-          "
+        <Input
+          placeholder="Descrição"
+          {...register("description")}
         />
-      </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="
-          bg-zinc-900
-          text-white
-          rounded-xl
-          p-3
-          md:col-span-2
-        "
-      >
-        {loading
-          ? "Salvando..."
-          : editingProperty
-          ? "Atualizar imóvel"
-          : "Cadastrar imóvel"}
-      </button>
-    </form>
+        <Button
+          type="submit"
+          loading={loading}
+        >
+          {editingProperty
+            ? "Atualizar Imóvel"
+            : "Cadastrar Imóvel"}
+        </Button>
+      </form>
+    </Card>
   );
 }

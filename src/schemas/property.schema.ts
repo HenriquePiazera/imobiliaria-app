@@ -3,38 +3,38 @@ import { z } from "zod";
 export const propertySchema = z.object({
   title: z
     .string()
-    .min(3, "Título obrigatório"),
+    .min(3, "Título muito curto"),
 
   type: z
     .string()
     .min(2, "Tipo obrigatório"),
 
-  city: z
-    .string()
-    .min(2, "Cidade obrigatória"),
+  purpose: z.enum([
+    "Venda",
+    "Aluguel",
+  ]),
 
   price: z.coerce
     .number()
     .min(1, "Preço obrigatório"),
 
-  area: z.coerce
-    .number()
-    .min(1, "Área obrigatória"),
+  city: z
+    .string()
+    .min(2, "Cidade obrigatória"),
 
-  bedrooms: z.coerce
-    .number()
-    .min(0, "Quantidade inválida"),
-
-  bathrooms: z.coerce
-    .number()
-    .min(0, "Quantidade inválida"),
+  district: z
+    .string()
+    .min(2, "Bairro obrigatório"),
 
   status: z.enum([
-    "available",
-    "rented",
-    "reserved",
-    "inactive",
+    "Disponível",
+    "Vendido",
+    "Alugado",
   ]),
+
+  description: z
+    .string()
+    .min(5, "Descrição obrigatória"),
 });
 
 export type PropertyFormData =

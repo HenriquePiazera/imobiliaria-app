@@ -5,25 +5,20 @@ export interface Property {
 
   type: string;
 
-  city: string;
+  purpose: "Venda" | "Aluguel";
 
   price: number;
 
-  area: number;
+  city: string;
 
-  bedrooms: number;
-
-  bathrooms: number;
+  district: string;
 
   status:
-    | "available"
-    | "rented"
-    | "reserved"
-    | "inactive";
+    | "Disponível"
+    | "Vendido"
+    | "Alugado";
 
-  imageUrl?: string;
-
-  images?: string[];
+  description: string;
 
   createdAt: string;
 }
