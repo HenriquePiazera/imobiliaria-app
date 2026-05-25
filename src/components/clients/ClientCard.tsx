@@ -1,3 +1,5 @@
+"use client";
+
 import { Client } from "@/types/client";
 
 import { Card } from "@/components/ui/Card";
@@ -19,31 +21,105 @@ export function ClientCard({
 }: ClientCardProps) {
   return (
     <Card>
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">
-          {client.name}
-        </h2>
+      <div className="space-y-4">
+        <div>
+          <h3
+            className="
+              text-lg
+              font-semibold
+            "
+          >
+            {client.name}
+          </h3>
 
-        <p className="text-zinc-600">
-          {client.email}
-        </p>
+          <p
+            className="
+              text-sm
+              text-zinc-500
+            "
+          >
+            {client.email}
+          </p>
+        </div>
 
-        <p className="text-zinc-600">
-          {client.phone}
-        </p>
+        <div
+          className="
+            space-y-2
+            text-sm
+          "
+        >
+          <p>
+            <strong>
+              Telefone:
+            </strong>{" "}
+            {client.phone}
+          </p>
 
-        <div className="flex gap-2 pt-4">
+          {client.cpf && (
+            <p>
+              <strong>
+                CPF:
+              </strong>{" "}
+              {client.cpf}
+            </p>
+          )}
+
+          {client.city && (
+            <p>
+              <strong>
+                Cidade:
+              </strong>{" "}
+              {client.city}
+            </p>
+          )}
+
+          {client.state && (
+            <p>
+              <strong>
+                Estado:
+              </strong>{" "}
+              {client.state}
+            </p>
+          )}
+
+          {client.address && (
+            <p>
+              <strong>
+                Endereço:
+              </strong>{" "}
+              {client.address}
+            </p>
+          )}
+
+          {client.notes && (
+            <p>
+              <strong>
+                Observações:
+              </strong>{" "}
+              {client.notes}
+            </p>
+          )}
+        </div>
+
+        <div
+          className="
+            flex
+            gap-2
+          "
+        >
           <Button
-            onClick={() => onEdit(client)}
+            onClick={() =>
+              onEdit(client)
+            }
           >
             Editar
           </Button>
 
           <Button
+            variant="danger"
             onClick={() =>
               onDelete(client.id)
             }
-            className="bg-red-600 hover:bg-red-500"
           >
             Excluir
           </Button>
