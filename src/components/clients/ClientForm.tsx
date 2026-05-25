@@ -46,6 +46,10 @@ export function ClientForm({
   } = useForm<ClientFormData>({
     resolver:
       zodResolver(clientSchema),
+
+    defaultValues: {
+      status: "lead",
+    },
   });
 
   useEffect(() => {
@@ -54,6 +58,15 @@ export function ClientForm({
         name: editingClient.name,
         email: editingClient.email,
         phone: editingClient.phone,
+        document:
+          editingClient.document,
+        city: editingClient.city,
+        state: editingClient.state,
+        address:
+          editingClient.address,
+        notes: editingClient.notes,
+        status:
+          editingClient.status,
       });
     }
   }, [editingClient, reset]);
@@ -72,7 +85,9 @@ export function ClientForm({
           : "Cliente cadastrado"
       );
 
-      reset();
+      reset({
+        status: "lead",
+      });
 
     } catch {
       toast.error(
@@ -94,7 +109,7 @@ export function ClientForm({
       >
         <Input
           type="text"
-          placeholder="Nome"
+          placeholder="Nome completo"
           {...register("name")}
         />
 
@@ -108,6 +123,84 @@ export function ClientForm({
           type="text"
           placeholder="Telefone"
           {...register("phone")}
+        />
+
+        <Input
+          type="text"
+          placeholder="CPF"
+          {...register("document")}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            type="text"
+            placeholder="Cidade"
+            {...register("city")}
+          />
+
+          <Input
+            type="text"
+            placeholder="Estado"
+            {...register("state")}
+          />
+        </div>
+
+        <Input
+          type="text"
+          placeholder="Endereço"
+          {...register("address")}
+        />
+
+        <select
+          {...register("status")}
+          className="
+            w-full
+            rounded-lg
+            border
+            border-zinc-300
+            bg-white
+            px-4
+            py-3
+            text-sm
+            outline-none
+          "
+        >
+          <option value="lead">
+            Lead
+          </option>
+
+          <option value="service">
+            Em atendimento
+          </option>
+
+          <option value="proposal">
+            Proposta enviada
+          </option>
+
+          <option value="closed">
+            Cliente fechado
+          </option>
+
+          <option value="lost">
+            Perdido
+          </option>
+        </select>
+
+        <textarea
+          placeholder="Observações"
+          {...register("notes")}
+          className="
+            w-full
+            min-h-[120px]
+            rounded-lg
+            border
+            border-zinc-300
+            bg-white
+            px-4
+            py-3
+            text-sm
+            outline-none
+          "
         />
 
         <Button

@@ -1,3 +1,10 @@
+export type ClientStatus =
+  | "lead"
+  | "service"
+  | "proposal"
+  | "closed"
+  | "lost";
+
 export interface Client {
   id: string;
 
@@ -7,15 +14,17 @@ export interface Client {
 
   phone: string;
 
-  createdAt: string;
+  document: string;
 
-  cpf?: string;
+  city: string;
 
-  city?: string;
+  state: string;
 
-  state?: string;
-
-  address?: string;
+  address: string;
 
   notes?: string;
+
+  status: ClientStatus;
+
+  createdAt: string;
 }

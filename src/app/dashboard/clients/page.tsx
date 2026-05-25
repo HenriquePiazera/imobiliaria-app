@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -12,6 +13,8 @@ import { ClientForm } from "@/components/clients/ClientForm";
 import { ClientList } from "@/components/clients/ClientList";
 
 import { ClientsSkeleton } from "@/components/clients/ClientsSkeleton";
+
+import { ClientFilters } from "@/components/clients/ClientFilters";
 
 import { Client } from "@/types/client";
 
@@ -29,32 +32,33 @@ export default function ClientsPage() {
   const [loading, setLoading] =
     useState(true);
 
+  const [search, setSearch] =
+    useState("");
+
   const [
     editingClient,
     setEditingClient,
-  ] = useState<Client | null>(
-    null
-  );
-
-  async function loadClients() {
-    try {
-      const data =
-        await clientRepository.getClients();
-
-      setClients(data);
-
-    } catch (error) {
-      console.error(
-        "Erro ao carregar clientes:",
-        error
-      );
-
-    } finally {
-      setLoading(false);
-    }
-  }
+  ] = useState<Client | null>(null);
 
   useEffect(() => {
+    async function loadClients() {
+      try {
+        const data =
+          await clientRepository.getClients();
+
+        setClients(data);
+
+      } catch (error) {
+        console.error(
+          "Erro ao carregar clientes:",
+          error
+        );
+
+      } finally {
+        setLoading(false);
+      }
+    }
+
     loadClients();
   }, []);
 
@@ -68,17 +72,36 @@ export default function ClientsPage() {
           data
         );
 
+        setClients((prev) =>
+          prev.map((client) =>
+            client.id ===
+            editingClient.id
+              ? {
+                  ...client,
+                  ...data,
+                }
+              : client
+          )
+        );
+
         setEditingClient(null);
 
       } else {
         await clientRepository.createClient({
           ...data,
+
+          notes:
+            data.notes || "",
+
           createdAt:
             new Date().toISOString(),
         } as Omit<Client, "id">);
-      }
 
-      await loadClients();
+        const updated =
+          await clientRepository.getClients();
+
+        setClients(updated);
+      }
 
     } catch (error) {
       console.error(
@@ -117,6 +140,30 @@ export default function ClientsPage() {
     setEditingClient(client);
   }
 
+  const filteredClients =
+    useMemo(() => {
+      return clients.filter(
+        (client) => {
+          const searchValue =
+            search.toLowerCase();
+
+          return (
+            (client.name || "")
+              .toLowerCase()
+              .includes(
+                searchValue
+              ) ||
+
+            (client.document || "")
+              .toLowerCase()
+              .includes(
+                searchValue
+              )
+          );
+        }
+      );
+    }, [clients, search]);
+
   return (
     <div className="space-y-8">
       <PageTitle
@@ -131,15 +178,29 @@ export default function ClientsPage() {
         }
       />
 
+      <ClientFilters
+        search={search}
+        onSearchChange={
+          setSearch
+        }
+        totalClients={
+          filteredClients.length
+        }
+      />
+
       {loading ? (
         <ClientsSkeleton />
       ) : (
         <ClientList
-          clients={clients}
+          clients={
+            filteredClients
+          }
           onDelete={
             handleDeleteClient
           }
-          onEdit={handleEditClient}
+          onEdit={
+            handleEditClient
+          }
         />
       )}
     </div>

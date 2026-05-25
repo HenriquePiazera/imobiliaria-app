@@ -1,10 +1,8 @@
-"use client";
-
 import { Client } from "@/types/client";
 
 import { Card } from "@/components/ui/Card";
 
-import { Button } from "@/components/ui/Button";
+import { ClientStatusBadge } from "./ClientStatusBadge";
 
 type ClientCardProps = {
   client: Client;
@@ -22,107 +20,98 @@ export function ClientCard({
   return (
     <Card>
       <div className="space-y-4">
-        <div>
-          <h3
-            className="
-              text-lg
-              font-semibold
-            "
-          >
-            {client.name}
-          </h3>
-
-          <p
-            className="
-              text-sm
-              text-zinc-500
-            "
-          >
-            {client.email}
-          </p>
-        </div>
-
         <div
           className="
-            space-y-2
-            text-sm
+            flex
+            items-start
+            justify-between
+            gap-4
           "
         >
+          <div>
+            <h2
+              className="
+                text-lg
+                font-semibold
+              "
+            >
+              {client.name}
+            </h2>
+
+            <p className="text-sm text-zinc-500">
+              {client.email}
+            </p>
+          </div>
+
+          <ClientStatusBadge
+            status={
+              client.status ||
+              "lead"
+            }
+          />
+        </div>
+
+        <div className="space-y-1 text-sm">
           <p>
-            <strong>
-              Telefone:
-            </strong>{" "}
+            <strong>Telefone:</strong>{" "}
             {client.phone}
           </p>
 
-          {client.cpf && (
-            <p>
-              <strong>
-                CPF:
-              </strong>{" "}
-              {client.cpf}
-            </p>
-          )}
+          <p>
+            <strong>CPF:</strong>{" "}
+            {client.document}
+          </p>
 
-          {client.city && (
-            <p>
-              <strong>
-                Cidade:
-              </strong>{" "}
-              {client.city}
-            </p>
-          )}
+          <p>
+            <strong>Cidade:</strong>{" "}
+            {client.city} - {client.state}
+          </p>
 
-          {client.state && (
-            <p>
-              <strong>
-                Estado:
-              </strong>{" "}
-              {client.state}
-            </p>
-          )}
-
-          {client.address && (
-            <p>
-              <strong>
-                Endereço:
-              </strong>{" "}
-              {client.address}
-            </p>
-          )}
+          <p>
+            <strong>Endereço:</strong>{" "}
+            {client.address}
+          </p>
 
           {client.notes && (
             <p>
-              <strong>
-                Observações:
-              </strong>{" "}
+              <strong>Obs:</strong>{" "}
               {client.notes}
             </p>
           )}
         </div>
 
-        <div
-          className="
-            flex
-            gap-2
-          "
-        >
-          <Button
+        <div className="flex gap-2 pt-2">
+          <button
             onClick={() =>
               onEdit(client)
             }
+            className="
+              rounded-lg
+              bg-zinc-900
+              px-4
+              py-2
+              text-sm
+              text-white
+            "
           >
             Editar
-          </Button>
+          </button>
 
-          <Button
-            variant="danger"
+          <button
             onClick={() =>
               onDelete(client.id)
             }
+            className="
+              rounded-lg
+              bg-red-600
+              px-4
+              py-2
+              text-sm
+              text-white
+            "
           >
             Excluir
-          </Button>
+          </button>
         </div>
       </div>
     </Card>
