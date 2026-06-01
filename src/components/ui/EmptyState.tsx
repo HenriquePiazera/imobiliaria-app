@@ -1,39 +1,25 @@
-interface EmptyStateProps {
-  title: string;
-  description: string;
-}
+type EmptyStateProps = {
+  message: string;
+};
 
 export function EmptyState({
-  title,
-  description,
+  message,
 }: EmptyStateProps) {
   return (
     <div
       className="
-        bg-white
-        border
         rounded-2xl
+        border
+        border-dashed
+        border-zinc-300
+        bg-white
         p-10
         text-center
-        shadow-sm
+        text-zinc-500
       "
     >
-      <h2
-        className="
-          text-xl
-          font-semibold
-        "
-      >
-        {title}
-      </h2>
-
-      <p
-        className="
-          text-zinc-500
-          mt-2
-        "
-      >
-        {description}
+      <p className="text-sm">
+        {message}
       </p>
     </div>
   );

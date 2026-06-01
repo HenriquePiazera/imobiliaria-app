@@ -2,14 +2,14 @@ import { Client } from "@/types/client";
 
 import { Card } from "@/components/ui/Card";
 
-import { Button } from "@/components/ui/Button";
+import { ClientStatusBadge } from "./ClientStatusBadge";
 
 type ClientCardProps = {
   client: Client;
 
   onEdit: (client: Client) => void;
 
-  onDelete: (id: string) => void;
+  onDelete: (client: Client) => void;
 };
 
 export function ClientCard({
@@ -19,34 +19,99 @@ export function ClientCard({
 }: ClientCardProps) {
   return (
     <Card>
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">
-          {client.name}
-        </h2>
+      <div className="space-y-4">
+        <div
+          className="
+            flex
+            items-start
+            justify-between
+            gap-4
+          "
+        >
+          <div>
+            <h2
+              className="
+                text-lg
+                font-semibold
+              "
+            >
+              {client.name}
+            </h2>
 
-        <p className="text-zinc-600">
-          {client.email}
-        </p>
+            <p className="text-sm text-zinc-500">
+              {client.email}
+            </p>
+          </div>
 
-        <p className="text-zinc-600">
-          {client.phone}
-        </p>
+          <ClientStatusBadge
+            status={
+              client.status ||
+              "lead"
+            }
+          />
+        </div>
 
-        <div className="flex gap-2 pt-4">
-          <Button
-            onClick={() => onEdit(client)}
+        <div className="space-y-1 text-sm">
+          <p>
+            <strong>Telefone:</strong>{" "}
+            {client.phone}
+          </p>
+
+          <p>
+            <strong>CPF:</strong>{" "}
+            {client.document}
+          </p>
+
+          <p>
+            <strong>Cidade:</strong>{" "}
+            {client.city} - {client.state}
+          </p>
+
+          <p>
+            <strong>Endereço:</strong>{" "}
+            {client.address}
+          </p>
+
+          {client.notes && (
+            <p>
+              <strong>Obs:</strong>{" "}
+              {client.notes}
+            </p>
+          )}
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <button
+            onClick={() =>
+              onEdit(client)
+            }
+            className="
+              rounded-lg
+              bg-zinc-900
+              px-4
+              py-2
+              text-sm
+              text-white
+            "
           >
             Editar
-          </Button>
+          </button>
 
-          <Button
+          <button
             onClick={() =>
-              onDelete(client.id)
+              onDelete(client)
             }
-            className="bg-red-600 hover:bg-red-500"
+            className="
+              rounded-lg
+              bg-red-600
+              px-4
+              py-2
+              text-sm
+              text-white
+            "
           >
             Excluir
-          </Button>
+          </button>
         </div>
       </div>
     </Card>

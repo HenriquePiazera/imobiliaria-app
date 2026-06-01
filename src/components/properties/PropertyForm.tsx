@@ -1,15 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
-  useEffect,
-  useState,
-} from "react";
-
-import { toast } from "sonner";
-
-import { useForm } from "react-hook-form";
+  useForm,
+  SubmitHandler,
+} from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+
+import { toast } from "sonner";
 
 import {
   propertySchema,
@@ -18,19 +18,23 @@ import {
 
 import { Property } from "@/types/property";
 
+import { Input } from "@/components/ui/Input";
+
+import { Button } from "@/components/ui/Button";
+
+import { Card } from "@/components/ui/Card";
+
 type PropertyFormProps = {
   onSubmit: (
     data: PropertyFormData
   ) => Promise<void>;
 
-  editingProperty:
-    | Property
-    | null;
+  editingProperty?: Property | null;
 };
 
 export function PropertyForm({
   onSubmit,
-  editingProperty,
+  editingProperty = null,
 }: PropertyFormProps) {
   const [loading, setLoading] =
     useState(false);
@@ -40,24 +44,44 @@ export function PropertyForm({
     handleSubmit,
     reset,
   } = useForm<PropertyFormData>({
-    resolver:
-      zodResolver(
-        propertySchema
-      ),
+    resolver: zodResolver(
+      propertySchema
+    ) as any,
   });
 
   useEffect(() => {
     if (editingProperty) {
-      reset(editingProperty);
-    }
-  }, [
-    editingProperty,
-    reset,
-  ]);
+      reset({
+        title:
+          editingProperty.title,
 
-  async function handleFormSubmit(
-    data: PropertyFormData
-  ) {
+        type:
+          editingProperty.type,
+
+        purpose:
+          editingProperty.purpose,
+
+        price:
+          editingProperty.price,
+
+        city:
+          editingProperty.city,
+
+        district:
+          editingProperty.district,
+
+        status:
+          editingProperty.status,
+
+        description:
+          editingProperty.description,
+      });
+    }
+  }, [editingProperty, reset]);
+
+  const handleFormSubmit: SubmitHandler<
+    PropertyFormData
+  > = async (data) => {
     try {
       setLoading(true);
 
@@ -70,121 +94,113 @@ export function PropertyForm({
       );
 
       reset();
+
     } catch {
       toast.error(
         "Erro ao salvar imóvel"
       );
+
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <form
-      onSubmit={handleSubmit(
-        handleFormSubmit
-      )}
-      className="
-        grid
-        grid-cols-1
-        md:grid-cols-2
-        gap-4
-      "
-    >
-      <input
-        placeholder="Título"
-        {...register("title")}
-        className="
-          border
-          p-3
-          rounded-xl
-        "
-      />
-
-      <input
-        type="number"
-        placeholder="Preço"
-        {...register("price")}
-        className="
-          border
-          p-3
-          rounded-xl
-        "
-      />
-
-      <input
-        placeholder="Tipo"
-        {...register("type")}
-        className="
-          border
-          p-3
-          rounded-xl
-        "
-      />
-
-      <input
-        placeholder="Cidade"
-        {...register("city")}
-        className="
-          border
-          p-3
-          rounded-xl
-        "
-      />
-
-      <input
-        type="number"
-        placeholder="Quartos"
-        {...register(
-          "bedrooms"
+    <Card>
+      <form
+        onSubmit={handleSubmit(
+          handleFormSubmit
         )}
-        className="
-          border
-          p-3
-          rounded-xl
-        "
-      />
-
-      <input
-        type="number"
-        placeholder="Banheiros"
-        {...register(
-          "bathrooms"
-        )}
-        className="
-          border
-          p-3
-          rounded-xl
-        "
-      />
-
-      <input
-        type="number"
-        placeholder="Área"
-        {...register("area")}
-        className="
-          border
-          p-3
-          rounded-xl
-        "
-      />
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="
-          bg-zinc-900
-          text-white
-          rounded-xl
-          p-3
-        "
+        className="space-y-4"
       >
-        {loading
-          ? "Salvando..."
-          : editingProperty
-          ? "Atualizar"
-          : "Cadastrar"}
-      </button>
-    </form>
+        <Input
+          placeholder="Título"
+          {...register("title")}
+        />
+
+        <Input
+          placeholder="Tipo"
+          {...register("type")}
+        />
+
+        <select
+          {...register("purpose")}
+          className="
+            w-full
+            rounded-lg
+            border
+            border-zinc-300
+            px-3
+            py-2
+            text-sm
+          "
+        >
+          <option value="Venda">
+            Venda
+          </option>
+
+          <option value="Aluguel">
+            Aluguel
+          </option>
+        </select>
+
+        <Input
+          type="number"
+          placeholder="Preço"
+          {...register("price", {
+            valueAsNumber: true,
+          })}
+        />
+
+        <Input
+          placeholder="Cidade"
+          {...register("city")}
+        />
+
+        <Input
+          placeholder="Bairro"
+          {...register("district")}
+        />
+
+        <select
+          {...register("status")}
+          className="
+            w-full
+            rounded-lg
+            border
+            border-zinc-300
+            px-3
+            py-2
+            text-sm
+          "
+        >
+          <option value="Disponível">
+            Disponível
+          </option>
+
+          <option value="Vendido">
+            Vendido
+          </option>
+
+          <option value="Alugado">
+            Alugado
+          </option>
+        </select>
+
+        <Input
+          placeholder="Descrição"
+          {...register("description")}
+        />
+
+        <Button
+          type="submit"
+          loading={loading}
+        >
+          {editingProperty
+            ? "Atualizar Imóvel"
+            : "Cadastrar Imóvel"}
+        </Button>
+      </form>
+    </Card>
   );
 }

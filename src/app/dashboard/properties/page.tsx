@@ -5,172 +5,216 @@ import {
   useState,
 } from "react";
 
-import {
-  createProperty,
-  deleteProperty,
-  subscribeToProperties,
-  updateProperty,
-} from "@/repositories/properties/property.repository";
+import { toast } from "sonner";
+
+import { PageTitle } from "@/components/ui/PageTitle";
+
+import { DeleteModal } from "@/components/ui/DeleteModal";
+
+import { PropertyForm } from "@/components/properties/PropertyForm";
+
+import { PropertyList } from "@/components/properties/PropertyList";
 
 import { Property } from "@/types/property";
 
-import {
-  PropertyFormData,
-} from "@/schemas/property.schema";
+import { PropertyFormData } from "@/schemas/property.schema";
 
-import {
-  PropertyForm,
-} from "@/components/properties/PropertyForm";
+import { PropertyRepository } from "@/repositories/properties/property.repository";
 
-import {
-  PropertyCard,
-} from "@/components/properties/PropertyCard";
-
-import {
-  EmptyState,
-} from "@/components/ui/EmptyState";
+const propertyRepository =
+  new PropertyRepository();
 
 export default function PropertiesPage() {
-  const [
-    properties,
-    setProperties,
-  ] = useState<Property[]>([]);
+  const [properties, setProperties] =
+    useState<Property[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [editingProperty, setEditingProperty] =
+    useState<Property | null>(null);
 
   const [
-    editingProperty,
-    setEditingProperty,
+    propertyToDelete,
+    setPropertyToDelete,
   ] = useState<Property | null>(
     null
   );
 
+  const [
+    deleteLoading,
+    setDeleteLoading,
+  ] = useState(false);
+
   useEffect(() => {
-    const unsubscribe =
-      subscribeToProperties(
-        (properties) => {
-          setProperties(
-            properties
-          );
-
-          setLoading(false);
-        }
-      );
-
-    return () => unsubscribe();
+    loadProperties();
   }, []);
+
+  async function loadProperties() {
+    try {
+      const data =
+        await propertyRepository.getProperties();
+
+      setProperties(data);
+
+    } catch (error) {
+      console.error(
+        "Erro ao carregar imóveis:",
+        error
+      );
+    }
+  }
 
   async function handleSubmit(
     data: PropertyFormData
   ) {
     try {
       if (editingProperty) {
-        await updateProperty(
+        await propertyRepository.updateProperty(
           editingProperty.id,
           data
         );
 
+        toast.success(
+          "Imóvel atualizado"
+        );
+
         setEditingProperty(null);
+
       } else {
-        await createProperty({
-          ...data,
-          createdAt:
-            new Date().toISOString(),
-        });
+        await propertyRepository.createProperty(
+          {
+            ...data,
+            createdAt:
+              new Date().toISOString(),
+          } as Omit<
+            Property,
+            "id"
+          >
+        );
+
+        toast.success(
+          "Imóvel cadastrado"
+        );
       }
+
+      await loadProperties();
+
     } catch (error) {
       console.error(
         "Erro ao salvar imóvel:",
         error
       );
+
+      toast.error(
+        "Erro ao salvar imóvel"
+      );
     }
   }
 
-  async function handleDelete(
-    id: string
-  ) {
-    const confirmed =
-      window.confirm(
-        "Deseja excluir este imóvel?"
-      );
-
-    if (!confirmed) return;
+  async function confirmDelete() {
+    if (!propertyToDelete) return;
 
     try {
-      await deleteProperty(id);
+      setDeleteLoading(true);
+
+      await propertyRepository.deleteProperty(
+        propertyToDelete.id
+      );
+
+      setProperties((prev) =>
+        prev.filter(
+          (property) =>
+            property.id !==
+            propertyToDelete.id
+        )
+      );
+
+      toast.success(
+        "Imóvel excluído"
+      );
+
+      setPropertyToDelete(null);
+
     } catch (error) {
       console.error(
         "Erro ao excluir imóvel:",
         error
       );
+
+      toast.error(
+        "Erro ao excluir imóvel"
+      );
+
+    } finally {
+      setDeleteLoading(false);
     }
+  }
+
+  function handleDelete(
+    property: Property
+  ) {
+    setPropertyToDelete(property);
   }
 
   function handleEdit(
     property: Property
   ) {
     setEditingProperty(property);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1
-          className="
-            text-3xl
-            font-bold
-          "
-        >
-          Imóveis
-        </h1>
+    <>
+      <div className="space-y-8">
+        <PageTitle
+          title="Imóveis"
+          subtitle="Gerencie os imóveis cadastrados"
+        />
 
-        <p className="text-zinc-500">
-          Gerencie os imóveis
-        </p>
+        <PropertyForm
+          onSubmit={handleSubmit}
+          editingProperty={
+            editingProperty
+          }
+        />
+
+        <PropertyList
+          properties={properties}
+          onDelete={(id) => {
+            const property =
+              properties.find(
+                (item) =>
+                  item.id === id
+              );
+
+            if (property) {
+              handleDelete(
+                property
+              );
+            }
+          }}
+          onEdit={handleEdit}
+        />
       </div>
 
-      <PropertyForm
-        onSubmit={handleSubmit}
-        editingProperty={
-          editingProperty
+      <DeleteModal
+        open={
+          !!propertyToDelete
         }
+        title="Excluir imóvel"
+        description={`Tem certeza que deseja excluir o imóvel "${propertyToDelete?.title}"?`}
+        onConfirm={
+          confirmDelete
+        }
+        onClose={() =>
+          setPropertyToDelete(
+            null
+          )
+        }
+        loading={deleteLoading}
       />
-
-      {loading ? (
-        <p>Carregando...</p>
-      ) : properties.length ===
-        0 ? (
-        <EmptyState
-          title="Nenhum imóvel cadastrado"
-          description="Cadastre o primeiro imóvel para começar."
-        />
-      ) : (
-        <div
-          className="
-            grid
-            grid-cols-1
-            md:grid-cols-2
-            xl:grid-cols-3
-            gap-6
-          "
-        >
-          {properties.map(
-            (property) => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                onEdit={
-                  handleEdit
-                }
-                onDelete={
-                  handleDelete
-                }
-              />
-            )
-          )}
-        </div>
-      )}
-    </div>
+    </>
   );
 }

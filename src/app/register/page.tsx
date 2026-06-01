@@ -1,25 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import { useRouter } from "next/navigation";
 
-import {
-  createUserWithEmailAndPassword,
-} from "firebase/auth";
+import { toast } from "sonner";
 
-import { auth } from "@/lib/firebase";
+import {
+  getAuthErrorMessage,
+  registerUser,
+} from "@/services/auth.service";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 import { Button } from "@/components/ui/Button";
 
 export default function RegisterPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
+  const { user } = useAuth();
+
+  const [email, setEmail] =
+    useState("");
+
   const [password, setPassword] =
     useState("");
 
   const [loading, setLoading] =
     useState(false);
+
+  useEffect(() => {
+    if (user) {
+      router.push("/dashboard");
+    }
+  }, [user, router]);
 
   async function handleRegister(
     e: React.FormEvent
@@ -29,19 +43,20 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
-      await createUserWithEmailAndPassword(
-        auth,
+      await registerUser(
         email,
         password
       );
 
-      alert("Conta criada com sucesso!");
+      toast.success(
+        "Conta criada com sucesso!"
+      );
 
       router.push("/dashboard");
     } catch (error: any) {
-      console.error(error);
-
-      alert(error.message);
+      toast.error(
+        getAuthErrorMessage(error.code)
+      );
     } finally {
       setLoading(false);
     }
@@ -55,6 +70,7 @@ export default function RegisterPage() {
         items-center
         justify-center
         bg-zinc-100
+        p-4
       "
     >
       <form
@@ -63,7 +79,7 @@ export default function RegisterPage() {
           bg-white
           p-8
           rounded-2xl
-          shadow
+          shadow-sm
           w-full
           max-w-md
           space-y-4

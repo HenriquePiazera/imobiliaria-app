@@ -3,7 +3,7 @@ import {
   collection,
   deleteDoc,
   doc,
-  onSnapshot,
+  getDocs,
   updateDoc,
 } from "firebase/firestore";
 
@@ -14,60 +14,52 @@ import { Property } from "@/types/property";
 const propertiesCollection =
   collection(db, "properties");
 
-export async function createProperty(
-  property: Omit<Property, "id">
-) {
-  return await addDoc(
-    propertiesCollection,
-    property
-  );
-}
+export class PropertyRepository {
+  async getProperties(): Promise<
+    Property[]
+  > {
+    const snapshot = await getDocs(
+      propertiesCollection
+    );
 
-export async function updateProperty(
-  id: string,
-  data: Partial<Property>
-) {
-  const propertyDoc = doc(
-    db,
-    "properties",
-    id
-  );
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Property[];
+  }
 
-  return await updateDoc(
-    propertyDoc,
-    data
-  );
-}
+  async createProperty(
+    data: Omit<Property, "id">
+  ) {
+    return await addDoc(
+      propertiesCollection,
+      data
+    );
+  }
 
-export async function deleteProperty(
-  id: string
-) {
-  const propertyDoc = doc(
-    db,
-    "properties",
-    id
-  );
+  async updateProperty(
+    id: string,
+    data: Partial<Property>
+  ) {
+    const propertyDoc = doc(
+      db,
+      "properties",
+      id
+    );
 
-  return await deleteDoc(
-    propertyDoc
-  );
-}
+    return await updateDoc(
+      propertyDoc,
+      data
+    );
+  }
 
-export function subscribeToProperties(
-  callback: (
-    properties: Property[]
-  ) => void
-) {
-  return onSnapshot(
-    propertiesCollection,
-    (snapshot) => {
-      const properties =
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Property[];
+  async deleteProperty(id: string) {
+    const propertyDoc = doc(
+      db,
+      "properties",
+      id
+    );
 
-      callback(properties);
-    }
-  );
+    return await deleteDoc(propertyDoc);
+  }
 }

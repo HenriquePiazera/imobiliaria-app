@@ -1,11 +1,24 @@
 export interface Property {
-    id: string;
-    title: string;
-    type: string;
-    city: string;
-    price: number;
-    area: number;
-    bedrooms: number;
-    bathrooms: number;
-    createdAt: string;
-  }
+  id: string;
+
+  title: string;
+
+  type: string;
+
+  purpose: "Venda" | "Aluguel";
+
+  price: number;
+
+  city: string;
+
+  district: string;
+
+  status:
+    | "Disponível"
+    | "Vendido"
+    | "Alugado";
+
+  description: string;
+
+  createdAt: string;
+}
