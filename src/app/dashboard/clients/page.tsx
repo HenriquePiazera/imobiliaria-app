@@ -1,73 +1,63 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
-import { PageTitle } from "@/components/ui/PageTitle";
+import { useEffect, useMemo, useState } from "react";
 
 import { ClientForm } from "@/components/clients/ClientForm";
-
 import { ClientList } from "@/components/clients/ClientList";
 
-import { ClientsSkeleton } from "@/components/clients/ClientsSkeleton";
-
-import { ClientsStats } from "@/components/clients/ClientsStats";
-
 import { Input } from "@/components/ui/Input";
-
-import { Client } from "@/types/client";
-
-import { ClientFormData } from "@/schemas/client.schema";
+import { Button } from "@/components/ui/Button";
 
 import { ClientRepository } from "@/repositories/clients/client.repository";
 
-const clientRepository =
-  new ClientRepository();
+import { Client } from "@/types/client";
 
 export default function ClientsPage() {
-  const [clients, setClients] =
-    useState<Client[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [search, setSearch] = useState("");
 
-  const [search, setSearch] =
-    useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "lead" | "client" | "inactive"
+  >("all");
 
   const [editingClient, setEditingClient] =
     useState<Client | null>(null);
 
+  const [clientToEdit, setClientToEdit] =
+    useState<Client | null>(null);
+
+  const [clientToDelete, setClientToDelete] =
+    useState<Client | null>(null);
+
   useEffect(() => {
-    async function loadClients() {
-      try {
-        const data =
-          await clientRepository.getClients();
-
-        setClients(data);
-
-      } catch (error) {
-        console.error(
-          "Erro ao carregar clientes:",
-          error
-        );
-
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadClients();
   }, []);
 
+  async function loadClients() {
+    try {
+      setLoading(true);
+
+      const data =
+        await ClientRepository.getClients();
+
+      setClients(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleSubmit(
-    data: ClientFormData
+    data: Omit<Client, "id" | "createdAt">
   ) {
     try {
+      setLoading(true);
+
       if (editingClient) {
-        await clientRepository.updateClient(
+        await ClientRepository.updateClient(
           editingClient.id,
           data
         );
@@ -85,156 +75,331 @@ export default function ClientsPage() {
 
         setEditingClient(null);
 
-      } else {
-        await clientRepository.createClient({
+        return;
+      }
+
+      const createdClient =
+        await ClientRepository.createClient({
           ...data,
           createdAt:
             new Date().toISOString(),
-        } as Omit<Client, "id">);
+        });
 
-        const updated =
-          await clientRepository.getClients();
-
-        setClients(updated);
-      }
-
+      setClients((prev) => [
+        {
+          id: createdClient.id,
+          ...data,
+          createdAt:
+            new Date().toISOString(),
+        },
+        ...prev,
+      ]);
     } catch (error) {
-      console.error(
-        "Erro ao salvar cliente:",
-        error
-      );
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function handleDeleteClient(
-    id: string
-  ) {
+  async function confirmDeleteClient() {
+    if (!clientToDelete) return;
+
     try {
-      await clientRepository.deleteClient(id);
+      await ClientRepository.deleteClient(
+        clientToDelete.id
+      );
 
       setClients((prev) =>
         prev.filter(
-          (client) => client.id !== id
+          (item) =>
+            item.id !==
+            clientToDelete.id
         )
       );
 
+      setClientToDelete(null);
     } catch (error) {
-      console.error(
-        "Erro ao excluir cliente:",
-        error
-      );
+      console.error(error);
     }
   }
 
-  function handleEditClient(
-    client: Client
-  ) {
-    setEditingClient(client);
-  }
-
   const filteredClients = useMemo(() => {
-    const searchLower =
-      search.toLowerCase();
-
     return clients.filter((client) => {
-      const name =
-        client.name?.toLowerCase() || "";
+      const matchesSearch =
+        client.name
+          .toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
+        client.email
+          .toLowerCase()
+          .includes(
+            search.toLowerCase()
+          );
 
-      const email =
-        client.email?.toLowerCase() || "";
-
-      const phone =
-        client.phone?.toLowerCase() || "";
-
-      const document =
-        client.document?.toLowerCase() || "";
-
-      const city =
-        client.city?.toLowerCase() || "";
+      const matchesStatus =
+        statusFilter === "all"
+          ? true
+          : client.status ===
+            statusFilter;
 
       return (
-        name.includes(searchLower) ||
-        email.includes(searchLower) ||
-        phone.includes(searchLower) ||
-        document.includes(searchLower) ||
-        city.includes(searchLower)
+        matchesSearch &&
+        matchesStatus
       );
     });
-  }, [clients, search]);
-
-  const totalClients =
-    clients.length;
-
-  const clientsWithDocument =
-    clients.filter(
-      (client) => client.document
-    ).length;
-
-  const clientsWithCity =
-    clients.filter(
-      (client) => client.city
-    ).length;
-
-  const clientsCreatedToday =
-    clients.filter((client) => {
-      const today =
-        new Date().toDateString();
-
-      const createdAt =
-        new Date(
-          client.createdAt
-        ).toDateString();
-
-      return today === createdAt;
-    }).length;
+  }, [
+    clients,
+    search,
+    statusFilter,
+  ]);
 
   return (
-    <div className="space-y-8">
-      <PageTitle
-        title="Clientes"
-        subtitle="Gerencie os clientes cadastrados"
-      />
+    <>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-zinc-900">
+            Clientes
+          </h1>
 
-      <ClientsStats
-        totalClients={totalClients}
-        clientsWithDocument={
-          clientsWithDocument
-        }
-        clientsWithCity={
-          clientsWithCity
-        }
-        clientsCreatedToday={
-          clientsCreatedToday
-        }
-      />
+          <p className="mt-1 text-sm text-zinc-500">
+            Gerencie seus clientes,
+            leads e contatos.
+          </p>
+        </div>
 
-      <ClientForm
-        onSubmit={handleSubmit}
-        editingClient={editingClient}
-      />
+        <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold">
+              {editingClient
+                ? "Editar cliente"
+                : "Novo cliente"}
+            </h2>
 
-      <div>
-        <Input
-          type="text"
-          placeholder="Buscar por nome, email, telefone, CPF ou cidade..."
-          value={search}
-          onChange={(e) =>
-            setSearch(e.target.value)
-          }
-        />
+            <ClientForm
+              initialData={
+                editingClient || undefined
+              }
+              onSubmit={handleSubmit}
+              loading={loading}
+            />
+
+            {editingClient && (
+              <div className="mt-4">
+                <Button
+                  type="button"
+                  onClick={() =>
+                    setEditingClient(
+                      null
+                    )
+                  }
+                >
+                  Cancelar edição
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-col gap-4 md:flex-row">
+                <Input
+                  placeholder="Buscar cliente..."
+                  value={search}
+                  onChange={(e) =>
+                    setSearch(
+                      e.target.value
+                    )
+                  }
+                />
+
+                <select
+                  value={statusFilter}
+                  onChange={(e) =>
+                    setStatusFilter(
+                      e.target.value as
+                        | "all"
+                        | "lead"
+                        | "client"
+                        | "inactive"
+                    )
+                  }
+                  className="
+                    rounded-xl
+                    border border-zinc-300
+                    bg-white
+                    px-4 py-3
+                    text-sm
+                    outline-none
+                  "
+                >
+                  <option value="all">
+                    Todos
+                  </option>
+
+                  <option value="lead">
+                    Leads
+                  </option>
+
+                  <option value="client">
+                    Clientes
+                  </option>
+
+                  <option value="inactive">
+                    Inativos
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">
+                  Clientes cadastrados
+                </h2>
+
+                <span className="text-sm text-zinc-500">
+                  {
+                    filteredClients.length
+                  }{" "}
+                  registros
+                </span>
+              </div>
+
+              <ClientList
+                clients={
+                  filteredClients
+                }
+                onEdit={
+                  setClientToEdit
+                }
+                onDelete={
+                  setClientToDelete
+                }
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {loading ? (
-        <ClientsSkeleton />
-      ) : (
-        <ClientList
-          clients={filteredClients}
-          onDelete={
-            handleDeleteClient
-          }
-          onEdit={handleEditClient}
-        />
+      {clientToEdit && (
+        <div
+          className="
+            fixed inset-0 z-50
+            flex items-center justify-center
+            bg-black/50
+            p-4
+          "
+        >
+          <div
+            className="
+              w-full max-w-md
+              rounded-2xl
+              bg-white
+              p-6
+              shadow-xl
+            "
+          >
+            <h2 className="text-xl font-semibold text-zinc-900">
+              Confirmar edição
+            </h2>
+
+            <p className="mt-3 text-sm text-zinc-600">
+              Deseja editar o cliente{" "}
+              <strong>
+                {clientToEdit.name}
+              </strong>
+              ?
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                type="button"
+                onClick={() =>
+                  setClientToEdit(
+                    null
+                  )
+                }
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                type="button"
+                onClick={() => {
+                  setEditingClient(
+                    clientToEdit
+                  );
+
+                  setClientToEdit(
+                    null
+                  );
+                }}
+              >
+                Editar
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
-    </div>
+
+      {clientToDelete && (
+        <div
+          className="
+            fixed inset-0 z-50
+            flex items-center justify-center
+            bg-black/50
+            p-4
+          "
+        >
+          <div
+            className="
+              w-full max-w-md
+              rounded-2xl
+              bg-white
+              p-6
+              shadow-xl
+            "
+          >
+            <h2 className="text-xl font-semibold text-zinc-900">
+              Confirmar exclusão
+            </h2>
+
+            <p className="mt-3 text-sm text-zinc-600">
+              Deseja realmente excluir o
+              cliente{" "}
+              <strong>
+                {
+                  clientToDelete.name
+                }
+              </strong>
+              ?
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                type="button"
+                onClick={() =>
+                  setClientToDelete(
+                    null
+                  )
+                }
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                type="button"
+                onClick={
+                  confirmDeleteClient
+                }
+              >
+                Excluir
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

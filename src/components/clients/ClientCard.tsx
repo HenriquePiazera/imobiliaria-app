@@ -9,7 +9,7 @@ type ClientCardProps = {
 
   onEdit: (client: Client) => void;
 
-  onDelete: (id: string) => void;
+  onDelete: (client: Client) => void;
 };
 
 export function ClientCard({
@@ -99,7 +99,7 @@ export function ClientCard({
 
           <button
             onClick={() =>
-              onDelete(client.id)
+              onDelete(client)
             }
             className="
               rounded-lg

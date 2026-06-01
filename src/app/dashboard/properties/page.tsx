@@ -5,7 +5,11 @@ import {
   useState,
 } from "react";
 
+import { toast } from "sonner";
+
 import { PageTitle } from "@/components/ui/PageTitle";
+
+import { DeleteModal } from "@/components/ui/DeleteModal";
 
 import { PropertyForm } from "@/components/properties/PropertyForm";
 
@@ -26,6 +30,18 @@ export default function PropertiesPage() {
 
   const [editingProperty, setEditingProperty] =
     useState<Property | null>(null);
+
+  const [
+    propertyToDelete,
+    setPropertyToDelete,
+  ] = useState<Property | null>(
+    null
+  );
+
+  const [
+    deleteLoading,
+    setDeleteLoading,
+  ] = useState(false);
 
   useEffect(() => {
     loadProperties();
@@ -56,6 +72,10 @@ export default function PropertiesPage() {
           data
         );
 
+        toast.success(
+          "Imóvel atualizado"
+        );
+
         setEditingProperty(null);
 
       } else {
@@ -69,6 +89,10 @@ export default function PropertiesPage() {
             "id"
           >
         );
+
+        toast.success(
+          "Imóvel cadastrado"
+        );
       }
 
       await loadProperties();
@@ -78,57 +102,119 @@ export default function PropertiesPage() {
         "Erro ao salvar imóvel:",
         error
       );
+
+      toast.error(
+        "Erro ao salvar imóvel"
+      );
     }
   }
 
-  async function handleDelete(
-    id: string
-  ) {
+  async function confirmDelete() {
+    if (!propertyToDelete) return;
+
     try {
+      setDeleteLoading(true);
+
       await propertyRepository.deleteProperty(
-        id
+        propertyToDelete.id
       );
 
       setProperties((prev) =>
         prev.filter(
           (property) =>
-            property.id !== id
+            property.id !==
+            propertyToDelete.id
         )
       );
+
+      toast.success(
+        "Imóvel excluído"
+      );
+
+      setPropertyToDelete(null);
 
     } catch (error) {
       console.error(
         "Erro ao excluir imóvel:",
         error
       );
+
+      toast.error(
+        "Erro ao excluir imóvel"
+      );
+
+    } finally {
+      setDeleteLoading(false);
     }
+  }
+
+  function handleDelete(
+    property: Property
+  ) {
+    setPropertyToDelete(property);
   }
 
   function handleEdit(
     property: Property
   ) {
     setEditingProperty(property);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   return (
-    <div className="space-y-8">
-      <PageTitle
-        title="Imóveis"
-        subtitle="Gerencie os imóveis cadastrados"
-      />
+    <>
+      <div className="space-y-8">
+        <PageTitle
+          title="Imóveis"
+          subtitle="Gerencie os imóveis cadastrados"
+        />
 
-      <PropertyForm
-        onSubmit={handleSubmit}
-        editingProperty={
-          editingProperty
+        <PropertyForm
+          onSubmit={handleSubmit}
+          editingProperty={
+            editingProperty
+          }
+        />
+
+        <PropertyList
+          properties={properties}
+          onDelete={(id) => {
+            const property =
+              properties.find(
+                (item) =>
+                  item.id === id
+              );
+
+            if (property) {
+              handleDelete(
+                property
+              );
+            }
+          }}
+          onEdit={handleEdit}
+        />
+      </div>
+
+      <DeleteModal
+        open={
+          !!propertyToDelete
         }
+        title="Excluir imóvel"
+        description={`Tem certeza que deseja excluir o imóvel "${propertyToDelete?.title}"?`}
+        onConfirm={
+          confirmDelete
+        }
+        onClose={() =>
+          setPropertyToDelete(
+            null
+          )
+        }
+        loading={deleteLoading}
       />
-
-      <PropertyList
-        properties={properties}
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-      />
-    </div>
+    </>
   );
 }

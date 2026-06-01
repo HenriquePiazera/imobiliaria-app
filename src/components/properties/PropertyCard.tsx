@@ -17,6 +17,38 @@ export function PropertyCard({
   onEdit,
   onDelete,
 }: PropertyCardProps) {
+  function getStatusStyles() {
+    switch (property.status) {
+      case "Disponível":
+        return `
+          bg-green-100
+          text-green-700
+          border-green-200
+        `;
+
+      case "Vendido":
+        return `
+          bg-red-100
+          text-red-700
+          border-red-200
+        `;
+
+      case "Alugado":
+        return `
+          bg-yellow-100
+          text-yellow-700
+          border-yellow-200
+        `;
+
+      default:
+        return `
+          bg-zinc-100
+          text-zinc-700
+          border-zinc-200
+        `;
+    }
+  }
+
   return (
     <div
       className="
@@ -25,54 +57,63 @@ export function PropertyCard({
         rounded-2xl
         overflow-hidden
         shadow-sm
+        hover:shadow-md
+        transition-shadow
       "
     >
       <div
         className="
+          relative
           h-52
-          bg-zinc-200
+          bg-gradient-to-br
+          from-zinc-200
+          to-zinc-300
+          flex
+          items-center
+          justify-center
         "
       >
-        {property.imageUrl ? (
-          <img
-            src={
-              property.imageUrl
-            }
-            alt={property.title}
-            className="
-              w-full
-              h-full
-              object-cover
-            "
-          />
-        ) : (
-          <div
-            className="
-              w-full
-              h-full
-              flex
-              items-center
-              justify-center
-              text-zinc-500
-            "
-          >
-            Sem imagem
-          </div>
-        )}
+        <span
+          className="
+            text-zinc-600
+            font-medium
+          "
+        >
+          Imóvel
+        </span>
+
+        <div
+          className={`
+            absolute
+            top-4
+            right-4
+            px-3
+            py-1
+            rounded-full
+            text-xs
+            font-semibold
+            border
+            ${getStatusStyles()}
+          `}
+        >
+          {property.status}
+        </div>
       </div>
 
       <div className="p-5 space-y-4">
-        <div>
+        <div className="space-y-1">
           <h2
             className="
               text-xl
               font-semibold
+              text-zinc-800
             "
           >
             {property.title}
           </h2>
 
           <p className="text-zinc-500">
+            {property.district},{" "}
             {property.city}
           </p>
         </div>
@@ -80,67 +121,28 @@ export function PropertyCard({
         <div
           className="
             flex
-            flex-wrap
-            gap-2
+            items-center
+            justify-between
           "
         >
-          {property.images?.map(
-            (image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt="Miniatura"
-                className="
-                  w-16
-                  h-16
-                  object-cover
-                  rounded-lg
-                  border
-                "
-              />
-            )
-          )}
-        </div>
-
-        <div
-          className="
-            grid
-            grid-cols-2
-            gap-3
-            text-sm
-          "
-        >
-          <div>
-            <strong>
-              Tipo:
-            </strong>{" "}
+          <span
+            className="
+              text-sm
+              text-zinc-500
+            "
+          >
             {property.type}
-          </div>
+          </span>
 
-          <div>
-            <strong>
-              Área:
-            </strong>{" "}
-            {property.area}m²
-          </div>
-
-          <div>
-            <strong>
-              Quartos:
-            </strong>{" "}
-            {
-              property.bedrooms
-            }
-          </div>
-
-          <div>
-            <strong>
-              Banheiros:
-            </strong>{" "}
-            {
-              property.bathrooms
-            }
-          </div>
+          <span
+            className="
+              text-sm
+              font-medium
+              text-zinc-700
+            "
+          >
+            {property.purpose}
+          </span>
         </div>
 
         <div>
@@ -148,6 +150,7 @@ export function PropertyCard({
             className="
               text-2xl
               font-bold
+              text-zinc-900
             "
           >
             R${" "}
@@ -157,10 +160,21 @@ export function PropertyCard({
           </p>
         </div>
 
+        <p
+          className="
+            text-sm
+            text-zinc-600
+            line-clamp-3
+          "
+        >
+          {property.description}
+        </p>
+
         <div
           className="
             flex
             gap-3
+            pt-2
           "
         >
           <button
@@ -170,10 +184,13 @@ export function PropertyCard({
             className="
               flex-1
               bg-blue-600
+              hover:bg-blue-700
+              transition-colors
               text-white
               px-4
               py-2
               rounded-lg
+              font-medium
             "
           >
             Editar
@@ -188,10 +205,13 @@ export function PropertyCard({
             className="
               flex-1
               bg-red-600
+              hover:bg-red-700
+              transition-colors
               text-white
               px-4
               py-2
               rounded-lg
+              font-medium
             "
           >
             Excluir

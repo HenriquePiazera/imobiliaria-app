@@ -1,30 +1,23 @@
 export type ClientStatus =
   | "lead"
-  | "service"
-  | "proposal"
-  | "closed"
-  | "lost";
+  | "client"
+  | "inactive";
 
 export interface Client {
   id: string;
 
   name: string;
-
   email: string;
-
   phone: string;
-
   document: string;
 
   city: string;
-
   state: string;
-
   address: string;
 
-  notes?: string;
-
   status: ClientStatus;
+
+  notes?: string;
 
   createdAt: string;
 }

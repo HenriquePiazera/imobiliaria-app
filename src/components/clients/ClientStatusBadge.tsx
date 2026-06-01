@@ -1,60 +1,54 @@
 import { ClientStatus } from "@/types/client";
 
-type ClientStatusBadgeProps = {
+interface ClientStatusBadgeProps {
   status: ClientStatus;
-};
+}
 
-const statusMap = {
+const statusMap: Record<
+  ClientStatus,
+  {
+    label: string;
+    className: string;
+  }
+> = {
   lead: {
     label: "Lead",
+
     className:
       "bg-blue-100 text-blue-700",
   },
 
-  service: {
-    label: "Em atendimento",
-    className:
-      "bg-yellow-100 text-yellow-700",
-  },
+  client: {
+    label: "Cliente",
 
-  proposal: {
-    label: "Proposta enviada",
-    className:
-      "bg-purple-100 text-purple-700",
-  },
-
-  closed: {
-    label: "Cliente fechado",
     className:
       "bg-green-100 text-green-700",
   },
 
-  lost: {
-    label: "Perdido",
+  inactive: {
+    label: "Inativo",
+
     className:
-      "bg-red-100 text-red-700",
+      "bg-zinc-200 text-zinc-700",
   },
 };
 
 export function ClientStatusBadge({
   status,
 }: ClientStatusBadgeProps) {
-  const config =
+  const currentStatus =
     statusMap[status];
 
   return (
     <span
       className={`
-        inline-flex
-        rounded-full
-        px-3
-        py-1
-        text-xs
-        font-medium
-        ${config.className}
+        inline-flex items-center
+        rounded-full px-3 py-1
+        text-xs font-medium
+        ${currentStatus.className}
       `}
     >
-      {config.label}
+      {currentStatus.label}
     </span>
   );
 }
