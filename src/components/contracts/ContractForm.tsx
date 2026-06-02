@@ -139,6 +139,26 @@ export function ContractForm({
     });
   }
 
+  async function updatePropertyStatus() {
+    if (!form.propertyId) return;
+
+    const propertyStatus =
+      form.status === "active"
+        ? "Alugado"
+        : "Disponível";
+
+    await updateDoc(
+      doc(
+        db,
+        "properties",
+        form.propertyId
+      ),
+      {
+        status: propertyStatus,
+      }
+    );
+  }
+
   async function handleSubmit(
     e: React.FormEvent
   ) {
@@ -163,6 +183,8 @@ export function ContractForm({
           }
         );
 
+        await updatePropertyStatus();
+
         toast.success(
           "Contrato atualizado"
         );
@@ -183,6 +205,8 @@ export function ContractForm({
               new Date().toISOString(),
           }
         );
+
+        await updatePropertyStatus();
 
         toast.success(
           "Contrato criado"
