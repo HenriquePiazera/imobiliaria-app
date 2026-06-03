@@ -317,14 +317,22 @@ export function ContractForm({
             Selecione um imóvel
           </option>
 
-          {properties.map((p) => (
-            <option
-              key={p.id}
-              value={p.id}
-            >
-              {p.title}
-            </option>
-          ))}
+          {properties
+            .filter(
+              (p) =>
+                p.status ===
+                  "Disponível" ||
+                p.id ===
+                  form.propertyId
+            )
+            .map((p) => (
+              <option
+                key={p.id}
+                value={p.id}
+              >
+                {p.title}
+              </option>
+            ))}
         </select>
       </div>
 
