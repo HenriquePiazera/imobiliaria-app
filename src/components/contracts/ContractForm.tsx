@@ -212,6 +212,35 @@ export function ContractForm({
         return;
       }
 
+      const selectedClient =
+        clients.find(
+          (client) =>
+            client.id ===
+            form.clientId
+        );
+
+      const selectedProperty =
+        properties.find(
+          (property) =>
+            property.id ===
+            form.propertyId
+        );
+
+      const contractData = {
+        ...form,
+
+        value: Number(
+          form.value
+        ),
+
+        clientName:
+          selectedClient?.name || "",
+
+        propertyTitle:
+          selectedProperty?.title ||
+          "",
+      };
+
       if (editingContract) {
         await updateDoc(
           doc(
@@ -219,13 +248,7 @@ export function ContractForm({
             "contracts",
             editingContract.id
           ),
-          {
-            ...form,
-
-            value: Number(
-              form.value
-            ),
-          }
+          contractData
         );
 
         await updatePropertyStatus();
@@ -240,11 +263,7 @@ export function ContractForm({
             "contracts"
           ),
           {
-            ...form,
-
-            value: Number(
-              form.value
-            ),
+            ...contractData,
 
             createdAt:
               new Date().toISOString(),

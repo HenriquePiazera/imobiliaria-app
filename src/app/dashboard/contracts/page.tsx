@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -23,6 +24,9 @@ const contractRepository =
 export default function ContractsPage() {
   const [contracts, setContracts] =
     useState<Contract[]>([]);
+
+  const [search, setSearch] =
+    useState("");
 
   const [editingContract, setEditingContract] =
     useState<Contract | null>(null);
@@ -99,6 +103,25 @@ export default function ContractsPage() {
     }
   }
 
+  const filteredContracts =
+    useMemo(() => {
+      const term =
+        search.toLowerCase();
+
+      return contracts.filter(
+        (contract) =>
+          contract.clientName
+            ?.toLowerCase()
+            .includes(term) ||
+          contract.propertyTitle
+            ?.toLowerCase()
+            .includes(term) ||
+          contract.id
+            .toLowerCase()
+            .includes(term)
+      );
+    }, [contracts, search]);
+
   return (
     <div className="space-y-8">
       <PageTitle
@@ -113,8 +136,29 @@ export default function ContractsPage() {
         onFinish={loadContracts}
       />
 
+      <div>
+        <input
+          type="text"
+          placeholder="Buscar por cliente, imóvel ou ID..."
+          value={search}
+          onChange={(e) =>
+            setSearch(
+              e.target.value
+            )
+          }
+          className="
+            w-full
+            border
+            rounded-xl
+            p-3
+          "
+        />
+      </div>
+
       <ContractList
-        contracts={contracts}
+        contracts={
+          filteredContracts
+        }
         onEdit={handleEdit}
         onDelete={
           handleOpenDeleteModal
