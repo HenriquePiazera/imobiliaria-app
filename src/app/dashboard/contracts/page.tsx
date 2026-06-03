@@ -1,10 +1,8 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
+
+import { toast } from "sonner";
 
 import { PageTitle } from "@/components/ui/PageTitle";
 
@@ -18,24 +16,13 @@ import { Contract } from "@/types/contract";
 
 import { ContractRepository } from "@/repositories/contracts/contract.repository";
 
-const contractRepository =
-  new ContractRepository();
+const contractRepository = new ContractRepository();
 
 export default function ContractsPage() {
-  const [contracts, setContracts] =
-    useState<Contract[]>([]);
-
-  const [search, setSearch] =
-    useState("");
-
-  const [editingContract, setEditingContract] =
-    useState<Contract | null>(null);
-
-  const [contractToDelete, setContractToDelete] =
-    useState<Contract | null>(null);
-
-  const [deleteLoading, setDeleteLoading] =
-    useState(false);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     loadContracts();
@@ -43,140 +30,102 @@ export default function ContractsPage() {
 
   async function loadContracts() {
     try {
-      const data =
-        await contractRepository.getContracts();
-
+      const data = await contractRepository.getContracts();
       setContracts(data);
-
     } catch (error) {
-      console.error(
-        "Erro ao carregar contratos:",
-        error
-      );
+      console.error("Erro ao carregar contratos:", error);
     }
   }
 
-  function handleEdit(
-    contract: Contract
-  ) {
-    setEditingContract(contract);
+  async function handleSubmit(data: Contract) {
+    try {
+      if (editingContract) {
+        await contractRepository.updateContract(editingContract.id, data);
+        toast.success("Contrato atualizado");
+        setEditingContract(null);
+      } else {
+        await contractRepository.createContract({
+          ...data,
+          createdAt: new Date().toISOString(),
+        });
+        toast.success("Contrato criado");
+      }
+
+      await loadContracts();
+    } catch (error) {
+      console.error("Erro ao salvar contrato:", error);
+      toast.error("Erro ao salvar contrato");
+    }
   }
 
-  function handleOpenDeleteModal(
-    contract: Contract
-  ) {
-    setContractToDelete(contract);
-  }
-
-  function handleCloseDeleteModal() {
-    setContractToDelete(null);
-  }
-
-  async function handleConfirmDelete() {
+  async function confirmDelete() {
     if (!contractToDelete) return;
 
     try {
       setDeleteLoading(true);
 
-      await contractRepository.deleteContract(
-        contractToDelete.id
-      );
+      await contractRepository.deleteContract(contractToDelete.id);
 
       setContracts((prev) =>
-        prev.filter(
-          (contract) =>
-            contract.id !==
-            contractToDelete.id
-        )
+        prev.filter((c) => c.id !== contractToDelete.id)
       );
 
-      handleCloseDeleteModal();
+      toast.success("Contrato excluído");
 
+      setContractToDelete(null);
     } catch (error) {
-      console.error(
-        "Erro ao excluir contrato:",
-        error
-      );
-
+      console.error("Erro ao excluir contrato:", error);
+      toast.error("Erro ao excluir contrato");
     } finally {
       setDeleteLoading(false);
     }
   }
 
-  const filteredContracts =
-    useMemo(() => {
-      const term =
-        search.toLowerCase();
+  function handleEdit(contract: Contract) {
+    setEditingContract(contract);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
-      return contracts.filter(
-        (contract) =>
-          contract.clientName
-            ?.toLowerCase()
-            .includes(term) ||
-          contract.propertyTitle
-            ?.toLowerCase()
-            .includes(term) ||
-          contract.id
-            .toLowerCase()
-            .includes(term)
-      );
-    }, [contracts, search]);
+  function handleDelete(contract: Contract) {
+    setContractToDelete(contract);
+  }
 
   return (
-    <div className="space-y-8">
-      <PageTitle
-        title="Contratos"
-        subtitle="Gerencie os contratos cadastrados"
-      />
-
-      <ContractForm
-        editingContract={
-          editingContract
-        }
-        onFinish={loadContracts}
-      />
-
-      <div>
-        <input
-          type="text"
-          placeholder="Buscar por cliente, imóvel ou ID..."
-          value={search}
-          onChange={(e) =>
-            setSearch(
-              e.target.value
-            )
-          }
-          className="
-            w-full
-            border
-            rounded-xl
-            p-3
-          "
+    <>
+      <div className="space-y-6">
+        <PageTitle
+          title="Contratos"
+          subtitle="Gerencie contratos de aluguel e venda"
         />
-      </div>
 
-      <ContractList
-        contracts={
-          filteredContracts
-        }
-        onEdit={handleEdit}
-        onDelete={
-          handleOpenDeleteModal
-        }
-      />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          
+          <div className="w-full">
+            <ContractForm
+              onSubmit={handleSubmit}
+              editingContract={editingContract}
+              onFinish={() => {}}
+            />
+          </div>
+
+          <div className="w-full">
+            <ContractList
+              contracts={contracts}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </div>
+        </div>
+      </div>
 
       <DeleteModal
         open={!!contractToDelete}
         title="Excluir contrato"
-        description="Tem certeza que deseja excluir este contrato?"
-        onClose={
-          handleCloseDeleteModal
-        }
-        onConfirm={
-          handleConfirmDelete
-        }
+        description={`Tem certeza que deseja excluir o contrato de "${contractToDelete?.clientName}"?`}
+        onConfirm={confirmDelete}
+        onClose={() => setContractToDelete(null)}
         loading={deleteLoading}
       />
-    </div>
+    </>
   );
 }
