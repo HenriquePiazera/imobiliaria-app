@@ -159,6 +159,44 @@ export function ContractForm({
     );
   }
 
+  async function validatePropertyAvailability() {
+    if (editingContract)
+      return true;
+
+    const contractsSnap =
+      await getDocs(
+        collection(
+          db,
+          "contracts"
+        )
+      );
+
+    const activeContract =
+      contractsSnap.docs.find(
+        (doc) => {
+          const data =
+            doc.data() as Contract;
+
+          return (
+            data.propertyId ===
+              form.propertyId &&
+            data.status ===
+              "active"
+          );
+        }
+      );
+
+    if (activeContract) {
+      toast.error(
+        "Este imóvel já possui um contrato ativo."
+      );
+
+      return false;
+    }
+
+    return true;
+  }
+
   async function handleSubmit(
     e: React.FormEvent
   ) {
@@ -166,6 +204,13 @@ export function ContractForm({
 
     try {
       setLoading(true);
+
+      const isAvailable =
+        await validatePropertyAvailability();
+
+      if (!isAvailable) {
+        return;
+      }
 
       if (editingContract) {
         await updateDoc(
@@ -273,11 +318,16 @@ export function ContractForm({
           name="clientId"
           value={form.clientId}
           onChange={handleChange}
+          disabled={
+            !!editingContract
+          }
           className="
             w-full
             border
             p-3
             rounded-xl
+            disabled:bg-zinc-100
+            disabled:cursor-not-allowed
           "
           required
         >
@@ -305,11 +355,16 @@ export function ContractForm({
           name="propertyId"
           value={form.propertyId}
           onChange={handleChange}
+          disabled={
+            !!editingContract
+          }
           className="
             w-full
             border
             p-3
             rounded-xl
+            disabled:bg-zinc-100
+            disabled:cursor-not-allowed
           "
           required
         >
