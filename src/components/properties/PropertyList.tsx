@@ -1,7 +1,12 @@
 "use client";
 
+ stabilization-phase-2
 import { Property } from "@/types/property";
 import { Button } from "@/components/ui/Button";
+
+import { Property }
+from "@/types/property";
+ master
 
 type PropertyListProps = {
   properties: Property[];
