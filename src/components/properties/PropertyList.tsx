@@ -2,7 +2,7 @@ import { PropertyCard }
 from "./PropertyCard";
 
 import { Property }
-from "@/domain/properties/property.types";
+from "@/types/property";
 
 type PropertyListProps = {
   properties: Property[];

@@ -138,7 +138,7 @@ export default function DashboardPage() {
       return properties.filter(
         (property) =>
           property.status ===
-          "rented"
+          "Alugado"
       ).length;
     }, [properties]);
 
@@ -147,7 +147,7 @@ export default function DashboardPage() {
       return properties.filter(
         (property) =>
           property.status ===
-          "available"
+          "Disponível"
       ).length;
     }, [properties]);
 

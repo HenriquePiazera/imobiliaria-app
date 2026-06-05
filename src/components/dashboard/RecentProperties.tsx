@@ -1,4 +1,4 @@
-import { Property }from "@/domain/properties/property.types";
+import { Property } from "@/types/property";
 
 import { Card } from "@/components/ui/Card";
 
@@ -34,12 +34,18 @@ export function RecentProperties({
                 </p>
 
                 <p className="text-sm text-zinc-500">
-                  {property.location}
+                  {property.district} - {property.city}
                 </p>
               </div>
 
               <p className="font-semibold">
-                R$ {property.price}
+                {property.price.toLocaleString(
+                  "pt-BR",
+                  {
+                    style: "currency",
+                    currency: "BRL",
+                  }
+                )}
               </p>
             </div>
           ))}
