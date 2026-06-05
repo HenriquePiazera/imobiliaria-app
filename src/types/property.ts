@@ -20,5 +20,7 @@ export interface Property {
 
   description: string;
 
+  imageUrl?: string;
+
   createdAt: string;
 }
