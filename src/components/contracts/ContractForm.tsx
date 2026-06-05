@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import { toast } from "sonner";
 
@@ -22,78 +19,48 @@ import {
 import { db } from "@/lib/firebase";
 
 interface ContractFormProps {
-  editingContract:
-    | Contract
-    | null;
+  onSubmit: (data: Contract) => Promise<void>;
 
-  onFinish: () => void;
+  editingContract: Contract | null;
+
+  onFinish?: () => void;
 }
 
 export function ContractForm({
+  onSubmit,
   editingContract,
   onFinish,
 }: ContractFormProps) {
-  const [clients, setClients] =
-    useState<Client[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const [
-    properties,
-    setProperties,
-  ] = useState<Property[]>([]);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [form, setForm] =
-    useState({
-      clientId: "",
-
-      propertyId: "",
-
-      value: 0,
-
-      status:
-        "active" as Contract["status"],
-
-      startDate: "",
-
-      endDate: "",
-    });
+  const [form, setForm] = useState({
+    clientId: "",
+    propertyId: "",
+    value: 0,
+    status: "active" as Contract["status"],
+    startDate: "",
+    endDate: "",
+  });
 
   useEffect(() => {
     async function loadData() {
-      const clientsSnap =
-        await getDocs(
-          collection(
-            db,
-            "clients"
-          )
-        );
-
-      const propertiesSnap =
-        await getDocs(
-          collection(
-            db,
-            "properties"
-          )
-        );
+      const clientsSnap = await getDocs(collection(db, "clients"));
+      const propertiesSnap = await getDocs(collection(db, "properties"));
 
       setClients(
-        clientsSnap.docs.map(
-          (doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })
-        ) as Client[]
+        clientsSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Client[]
       );
 
       setProperties(
-        propertiesSnap.docs.map(
-          (doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })
-        ) as Property[]
+        propertiesSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Property[]
       );
     }
 
@@ -103,116 +70,65 @@ export function ContractForm({
   useEffect(() => {
     if (editingContract) {
       setForm({
-        clientId:
-          editingContract.clientId,
-
-        propertyId:
-          editingContract.propertyId,
-
-        value:
-          editingContract.value,
-
-        status:
-          editingContract.status,
-
-        startDate:
-          editingContract.startDate,
-
-        endDate:
-          editingContract.endDate ||
-          "",
+        clientId: editingContract.clientId,
+        propertyId: editingContract.propertyId,
+        value: editingContract.value,
+        status: editingContract.status,
+        startDate: editingContract.startDate,
+        endDate: editingContract.endDate || "",
       });
     }
   }, [editingContract]);
 
   function handleChange(
-    e: React.ChangeEvent<
-      | HTMLInputElement
-      | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
     setForm({
       ...form,
-
-      [e.target.name]:
-        e.target.value,
+      [e.target.name]: e.target.value,
     });
   }
 
-  async function handleSubmit(
-    e: React.FormEvent
-  ) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     try {
       setLoading(true);
 
-      if (editingContract) {
-        await updateDoc(
-          doc(
-            db,
-            "contracts",
-            editingContract.id
-          ),
-          {
-            ...form,
+      const selectedClient = clients.find(
+        (c) => c.id === form.clientId
+      );
 
-            value: Number(
-              form.value
-            ),
-          }
-        );
+      const selectedProperty = properties.find(
+        (p) => p.id === form.propertyId
+      );
 
-        toast.success(
-          "Contrato atualizado"
-        );
-      } else {
-        await addDoc(
-          collection(
-            db,
-            "contracts"
-          ),
-          {
-            ...form,
+      const contractData: Contract = {
+        ...form,
+        value: Number(form.value),
+        clientName: selectedClient?.name || "",
+        propertyTitle: selectedProperty?.title || "",
+      } as Contract;
 
-            value: Number(
-              form.value
-            ),
+      await onSubmit(contractData);
 
-            createdAt:
-              new Date().toISOString(),
-          }
-        );
-
-        toast.success(
-          "Contrato criado"
-        );
-      }
+      toast.success(
+        editingContract ? "Contrato atualizado" : "Contrato criado"
+      );
 
       setForm({
         clientId: "",
-
         propertyId: "",
-
         value: 0,
-
         status: "active",
-
         startDate: "",
-
         endDate: "",
       });
 
-      onFinish();
+      if (onFinish) onFinish();
     } catch (error) {
-      console.error(
-        "Erro ao salvar contrato:",
-        error
-      );
-
-      toast.error(
-        "Erro ao salvar contrato"
-      );
+      console.error("Erro ao salvar contrato:", error);
+      toast.error("Erro ao salvar contrato");
     } finally {
       setLoading(false);
     }
@@ -220,193 +136,87 @@ export function ContractForm({
 
   return (
     <form
-      className="
-        bg-white
-        border
-        rounded-2xl
-        p-6
-        space-y-4
-      "
       onSubmit={handleSubmit}
+      className="bg-white border rounded-2xl p-6 space-y-4"
     >
-      <h2
-        className="
-          text-lg
-          font-semibold
-        "
-      >
-        {editingContract
-          ? "Editar contrato"
-          : "Novo contrato"}
+      <h2 className="text-lg font-semibold">
+        {editingContract ? "Editar contrato" : "Novo contrato"}
       </h2>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium">
-          Cliente
-        </label>
+      <select
+        name="clientId"
+        value={form.clientId}
+        onChange={handleChange}
+        className="w-full border p-3 rounded-xl"
+        required
+      >
+        <option value="">Selecione um cliente</option>
 
-        <select
-          name="clientId"
-          value={form.clientId}
-          onChange={handleChange}
-          className="
-            w-full
-            border
-            p-3
-            rounded-xl
-          "
-          required
-        >
-          <option value="">
-            Selecione um cliente
+        {clients.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
           </option>
+        ))}
+      </select>
 
-          {clients.map((c) => (
-            <option
-              key={c.id}
-              value={c.id}
-            >
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <select
+        name="propertyId"
+        value={form.propertyId}
+        onChange={handleChange}
+        className="w-full border p-3 rounded-xl"
+        required
+      >
+        <option value="">Selecione um imóvel</option>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium">
-          Imóvel
-        </label>
-
-        <select
-          name="propertyId"
-          value={form.propertyId}
-          onChange={handleChange}
-          className="
-            w-full
-            border
-            p-3
-            rounded-xl
-          "
-          required
-        >
-          <option value="">
-            Selecione um imóvel
+        {properties.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.title}
           </option>
+        ))}
+      </select>
 
-          {properties.map((p) => (
-            <option
-              key={p.id}
-              value={p.id}
-            >
-              {p.title}
-            </option>
-          ))}
-        </select>
-      </div>
+      <input
+        type="number"
+        name="value"
+        value={form.value}
+        onChange={handleChange}
+        className="w-full border p-3 rounded-xl"
+        placeholder="Valor"
+        required
+      />
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium">
-          Valor do aluguel
-        </label>
+      <select
+        name="status"
+        value={form.status}
+        onChange={handleChange}
+        className="w-full border p-3 rounded-xl"
+      >
+        <option value="active">Ativo</option>
+        <option value="finished">Finalizado</option>
+        <option value="canceled">Cancelado</option>
+      </select>
 
-        <input
-          type="number"
-          name="value"
-          value={form.value}
-          onChange={handleChange}
-          placeholder="Ex.: 2500"
-          className="
-            w-full
-            border
-            p-3
-            rounded-xl
-          "
-          required
-        />
-      </div>
+      <input
+        type="date"
+        name="startDate"
+        value={form.startDate}
+        onChange={handleChange}
+        className="w-full border p-3 rounded-xl"
+        required
+      />
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium">
-          Status
-        </label>
-
-        <select
-          name="status"
-          value={form.status}
-          onChange={handleChange}
-          className="
-            w-full
-            border
-            p-3
-            rounded-xl
-          "
-        >
-          <option value="active">
-            Ativo
-          </option>
-
-          <option value="finished">
-            Finalizado
-          </option>
-
-          <option value="canceled">
-            Cancelado
-          </option>
-        </select>
-      </div>
-
-      <div className="space-y-1">
-        <label className="text-sm font-medium">
-          Data de entrada
-        </label>
-
-        <input
-          type="date"
-          name="startDate"
-          value={form.startDate}
-          onChange={handleChange}
-          className="
-            w-full
-            border
-            p-3
-            rounded-xl
-          "
-          required
-        />
-      </div>
-
-      <div className="space-y-1">
-        <label className="text-sm font-medium">
-          Data de encerramento
-        </label>
-
-        <input
-          type="date"
-          name="endDate"
-          value={form.endDate}
-          onChange={handleChange}
-          className="
-            w-full
-            border
-            p-3
-            rounded-xl
-          "
-        />
-      </div>
+      <input
+        type="date"
+        name="endDate"
+        value={form.endDate}
+        onChange={handleChange}
+        className="w-full border p-3 rounded-xl"
+      />
 
       <button
         type="submit"
         disabled={loading}
-        className="
-          bg-black
-          hover:bg-zinc-800
-          transition-colors
-          text-white
-          px-4
-          py-3
-          rounded-xl
-          w-full
-        "
+        className="w-full bg-black text-white p-3 rounded-xl"
       >
         {loading
           ? "Salvando..."

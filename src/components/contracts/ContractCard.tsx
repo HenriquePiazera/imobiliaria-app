@@ -29,11 +29,12 @@ export function ContractCard({
               font-semibold
             "
           >
-            Contrato
+            Contrato #
+            {contract.id.slice(0, 6)}
           </h2>
 
           <p className="text-sm text-zinc-500">
-            ID: {contract.id}
+            Status: {contract.status}
           </p>
         </div>
 
@@ -42,14 +43,16 @@ export function ContractCard({
             <strong>
               Cliente:
             </strong>{" "}
-            {contract.clientId}
+            {contract.clientName ||
+              contract.clientId}
           </p>
 
           <p>
             <strong>
               Imóvel:
             </strong>{" "}
-            {contract.propertyId}
+            {contract.propertyTitle ||
+              contract.propertyId}
           </p>
 
           <p>
@@ -73,7 +76,8 @@ export function ContractCard({
             <strong>
               Fim:
             </strong>{" "}
-            {contract.endDate}
+            {contract.endDate ||
+              "-"}
           </p>
         </div>
 

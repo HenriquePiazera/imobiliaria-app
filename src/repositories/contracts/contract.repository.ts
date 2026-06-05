@@ -3,12 +3,12 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   updateDoc,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
-
 import { Contract } from "@/types/contract";
 
 const contractsCollection = collection(db, "contracts");
@@ -34,6 +34,19 @@ export class ContractRepository {
 
   async deleteContract(id: string) {
     const contractDoc = doc(db, "contracts", id);
-    return await deleteDoc(contractDoc);
+
+    const snapshot = await getDoc(contractDoc);
+
+    if (!snapshot.exists()) return;
+
+    const contract = snapshot.data() as Contract;
+
+    if (contract.status === "active" && contract.propertyId) {
+      await updateDoc(doc(db, "properties", contract.propertyId), {
+        status: "Disponível",
+      });
+    }
+
+    await deleteDoc(contractDoc);
   }
 }

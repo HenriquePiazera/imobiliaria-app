@@ -1,105 +1,53 @@
-interface DeleteModalProps {
-    open: boolean;
-  
-    title: string;
-  
-    description: string;
-  
-    onConfirm: () => void;
-  
-    onClose: () => void;
-  
-    loading?: boolean;
-  }
-  
-  export function DeleteModal({
-    open,
-    title,
-    description,
-    onConfirm,
-    onClose,
-    loading,
-  }: DeleteModalProps) {
-    if (!open) return null;
-  
-    return (
-      <div
-        className="
-          fixed
-          inset-0
-          z-50
-          bg-black/50
-          flex
-          items-center
-          justify-center
-          p-4
-        "
-      >
-        <div
-          className="
-            bg-white
-            rounded-2xl
-            w-full
-            max-w-md
-            p-6
-            space-y-6
-            shadow-xl
-          "
-        >
-          <div className="space-y-2">
-            <h2
-              className="
-                text-2xl
-                font-bold
-              "
-            >
-              {title}
-            </h2>
-  
-            <p className="text-zinc-500">
-              {description}
-            </p>
-          </div>
-  
-          <div
-            className="
-              flex
-              justify-end
-              gap-3
-            "
+type DeleteModalProps = {
+  open: boolean;
+  title: string;
+  description: string;
+  onConfirm: () => void;
+  onClose: () => void;
+  loading?: boolean;
+
+  // 🔥 NOVO (opcional)
+  confirmText?: string;
+  cancelText?: string;
+};
+
+export function DeleteModal({
+  open,
+  title,
+  description,
+  onConfirm,
+  onClose,
+  loading = false,
+  confirmText = "Excluir",
+  cancelText = "Cancelar",
+}: DeleteModalProps) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+        <h2 className="text-lg font-semibold">{title}</h2>
+
+        <p className="text-sm text-zinc-600">{description}</p>
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border"
+            disabled={loading}
           >
-            <button
-              onClick={onClose}
-              disabled={loading}
-              className="
-                px-4
-                py-2
-                rounded-xl
-                border
-              "
-            >
-              Cancelar
-            </button>
-  
-            <button
-              onClick={onConfirm}
-              disabled={loading}
-              className="
-                px-4
-                py-2
-                rounded-xl
-                bg-red-600
-                hover:bg-red-700
-                transition-colors
-                text-white
-              "
-            >
-              {loading
-                ? "Excluindo..."
-                : "Excluir"}
-            </button>
-          </div>
+            {cancelText}
+          </button>
+
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="px-4 py-2 rounded-lg bg-black text-white"
+          >
+            {loading ? "Carregando..." : confirmText}
+          </button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
