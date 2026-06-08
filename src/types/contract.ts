@@ -7,12 +7,11 @@ export interface Contract {
   propertyId: string;
   propertyTitle?: string;
 
+  type: "sale" | "rent";
+
   value: number;
 
-  status:
-    | "active"
-    | "finished"
-    | "canceled";
+  status: "active" | "finished" | "canceled";
 
   startDate: string;
   endDate?: string;

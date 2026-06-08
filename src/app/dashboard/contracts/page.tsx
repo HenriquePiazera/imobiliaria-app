@@ -1,131 +1,84 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { toast } from "sonner";
 
-import { PageTitle } from "@/components/ui/PageTitle";
-
-import { ContractForm } from "@/components/contracts/ContractForm";
-
-import { ContractList } from "@/components/contracts/ContractList";
-
-import { DeleteModal } from "@/components/ui/DeleteModal";
-
 import { Contract } from "@/types/contract";
-
 import { ContractRepository } from "@/repositories/contracts/contract.repository";
 
-const contractRepository = new ContractRepository();
+import { ContractForm } from "@/components/contracts/ContractForm";
+import { ContractList } from "@/components/contracts/ContractList";
+import { DeleteModal } from "@/components/ui/DeleteModal";
+import { PageTitle } from "@/components/ui/PageTitle";
+
+const repo = new ContractRepository();
 
 export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [editingContract, setEditingContract] = useState<Contract | null>(null);
-  const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editing, setEditing] = useState<Contract | null>(null);
+  const [toDelete, setToDelete] = useState<Contract | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadContracts();
-  }, []);
-
-  async function loadContracts() {
-    try {
-      const data = await contractRepository.getContracts();
-      setContracts(data);
-    } catch (error) {
-      console.error("Erro ao carregar contratos:", error);
-    }
+  async function load() {
+    const data = await repo.getContracts();
+    setContracts(data);
   }
 
-  async function handleSubmit(data: Contract) {
-    try {
-      if (editingContract) {
-        await contractRepository.updateContract(editingContract.id, data);
-        toast.success("Contrato atualizado");
-        setEditingContract(null);
-      } else {
-        await contractRepository.createContract({
-          ...data,
-          createdAt: new Date().toISOString(),
-        });
-        toast.success("Contrato criado");
-      }
+  useEffect(() => {
+    load();
+  }, []);
 
-      await loadContracts();
-    } catch (error) {
-      console.error("Erro ao salvar contrato:", error);
-      toast.error("Erro ao salvar contrato");
+  async function handleSubmit(data: Contract) {
+    if (editing) {
+      await repo.updateContract(editing.id, data);
+      setEditing(null);
+    } else {
+      await repo.createContract({
+        ...data,
+        createdAt: new Date().toISOString(),
+      });
     }
+
+    await load();
   }
 
   async function confirmDelete() {
-    if (!contractToDelete) return;
+    if (!toDelete) return;
 
-    try {
-      setDeleteLoading(true);
+    setLoading(true);
 
-      await contractRepository.deleteContract(contractToDelete.id);
+    await repo.deleteContract(toDelete.id);
 
-      setContracts((prev) =>
-        prev.filter((c) => c.id !== contractToDelete.id)
-      );
+    setContracts((prev) => prev.filter((c) => c.id !== toDelete.id));
 
-      toast.success("Contrato excluído");
+    setToDelete(null);
+    setLoading(false);
 
-      setContractToDelete(null);
-    } catch (error) {
-      console.error("Erro ao excluir contrato:", error);
-      toast.error("Erro ao excluir contrato");
-    } finally {
-      setDeleteLoading(false);
-    }
-  }
-
-  function handleEdit(contract: Contract) {
-    setEditingContract(contract);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function handleDelete(contract: Contract) {
-    setContractToDelete(contract);
+    toast.success("Contrato removido");
   }
 
   return (
-    <>
-      <div className="space-y-6">
-        <PageTitle
-          title="Contratos"
-          subtitle="Gerencie contratos de aluguel e venda"
+    <div className="space-y-6">
+      <PageTitle title="Contratos" subtitle="Gestão de contratos" />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ContractForm onSubmit={handleSubmit} editingContract={editing} />
+
+        <ContractList
+          contracts={contracts}
+          onEdit={setEditing}
+          onDelete={setToDelete}
         />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          
-          <div className="w-full">
-            <ContractForm
-              onSubmit={handleSubmit}
-              editingContract={editingContract}
-              onFinish={() => {}}
-            />
-          </div>
-
-          <div className="w-full">
-            <ContractList
-              contracts={contracts}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          </div>
-        </div>
       </div>
 
       <DeleteModal
-        open={!!contractToDelete}
+        open={!!toDelete}
         title="Excluir contrato"
-        description={`Tem certeza que deseja excluir o contrato de "${contractToDelete?.clientName}"?`}
+        description="Tem certeza?"
+        onClose={() => setToDelete(null)}
         onConfirm={confirmDelete}
-        onClose={() => setContractToDelete(null)}
-        loading={deleteLoading}
+        loading={loading}
       />
-    </>
+    </div>
   );
 }
