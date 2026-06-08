@@ -3,7 +3,6 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDoc,
   getDocs,
   updateDoc,
 } from "firebase/firestore";
@@ -12,6 +11,11 @@ import { db } from "@/lib/firebase";
 import { Contract } from "@/types/contract";
 
 const contractsCollection = collection(db, "contracts");
+
+export type CreateContractDTO = Omit<
+  Contract,
+  "id" | "createdAt"
+>;
 
 export class ContractRepository {
   async getContracts(): Promise<Contract[]> {
@@ -23,30 +27,20 @@ export class ContractRepository {
     })) as Contract[];
   }
 
-  async createContract(data: Omit<Contract, "id">) {
-    return await addDoc(contractsCollection, data);
+  async createContract(data: CreateContractDTO) {
+    return await addDoc(contractsCollection, {
+      ...data,
+      createdAt: new Date().toISOString(),
+    });
   }
 
   async updateContract(id: string, data: Partial<Contract>) {
-    const contractDoc = doc(db, "contracts", id);
-    return await updateDoc(contractDoc, data);
+    const ref = doc(db, "contracts", id);
+    return await updateDoc(ref, data);
   }
 
   async deleteContract(id: string) {
-    const contractDoc = doc(db, "contracts", id);
-
-    const snapshot = await getDoc(contractDoc);
-
-    if (!snapshot.exists()) return;
-
-    const contract = snapshot.data() as Contract;
-
-    if (contract.status === "active" && contract.propertyId) {
-      await updateDoc(doc(db, "properties", contract.propertyId), {
-        status: "Disponível",
-      });
-    }
-
-    await deleteDoc(contractDoc);
+    const ref = doc(db, "contracts", id);
+    return await deleteDoc(ref);
   }
 }
