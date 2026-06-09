@@ -8,7 +8,6 @@ import {
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
-
 import { Client } from "@/types/client";
 
 const clientsCollection = collection(
@@ -27,8 +26,8 @@ export class ClientRepository {
     return snapshot.docs.map(
       (document) =>
         ({
-          id: document.id,
           ...document.data(),
+          id: document.id,
         }) as Client
     );
   }
@@ -46,14 +45,14 @@ export class ClientRepository {
     id: string,
     data: Partial<Client>
   ) {
-    const clientDoc = doc(
+    const clientRef = doc(
       db,
       "clients",
       id
     );
 
     return await updateDoc(
-      clientDoc,
+      clientRef,
       data
     );
   }
@@ -61,12 +60,14 @@ export class ClientRepository {
   static async deleteClient(
     id: string
   ) {
-    const clientDoc = doc(
+    const clientRef = doc(
       db,
       "clients",
       id
     );
 
-    return await deleteDoc(clientDoc);
+    return await deleteDoc(
+      clientRef
+    );
   }
 }

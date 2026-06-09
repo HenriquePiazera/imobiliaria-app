@@ -8,11 +8,13 @@ import {
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
-
 import { Property } from "@/types/property";
 
 const propertiesCollection =
-  collection(db, "properties");
+  collection(
+    db,
+    "properties"
+  );
 
 export class PropertyRepository {
   async getProperties(): Promise<
@@ -22,10 +24,13 @@ export class PropertyRepository {
       propertiesCollection
     );
 
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Property[];
+    return snapshot.docs.map(
+      (document) =>
+        ({
+          ...document.data(),
+          id: document.id,
+        }) as Property
+    );
   }
 
   async createProperty(
@@ -41,25 +46,29 @@ export class PropertyRepository {
     id: string,
     data: Partial<Property>
   ) {
-    const propertyDoc = doc(
+    const propertyRef = doc(
       db,
       "properties",
       id
     );
 
     return await updateDoc(
-      propertyDoc,
+      propertyRef,
       data
     );
   }
 
-  async deleteProperty(id: string) {
-    const propertyDoc = doc(
+  async deleteProperty(
+    id: string
+  ) {
+    const propertyRef = doc(
       db,
       "properties",
       id
     );
 
-    return await deleteDoc(propertyDoc);
+    return await deleteDoc(
+      propertyRef
+    );
   }
 }
