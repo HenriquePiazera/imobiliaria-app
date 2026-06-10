@@ -1,27 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { toast } from "sonner";
 
 import { PageTitle } from "@/components/ui/PageTitle";
-
 import { ContractForm } from "@/components/contracts/ContractForm";
-
 import { ContractList } from "@/components/contracts/ContractList";
-
 import { DeleteModal } from "@/components/ui/DeleteModal";
 
 import { Contract } from "@/types/contract";
-
 import { ContractRepository } from "@/repositories/contracts/contract.repository";
 
 const contractRepository = new ContractRepository();
 
 export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [editingContract, setEditingContract] = useState<Contract | null>(null);
-  const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
+  const [editingContract, setEditingContract] =
+    useState<Contract | null>(null);
+
+  const [contractToDelete, setContractToDelete] =
+    useState<Contract | null>(null);
+
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
@@ -30,31 +29,65 @@ export default function ContractsPage() {
 
   async function loadContracts() {
     try {
-      const data = await contractRepository.getContracts();
+      const data =
+        await contractRepository.getContracts();
+
       setContracts(data);
     } catch (error) {
-      console.error("Erro ao carregar contratos:", error);
+      console.error(
+        "Erro ao carregar contratos:",
+        error
+      );
+
+      toast.error(
+        "Erro ao carregar contratos"
+      );
     }
   }
 
-  async function handleSubmit(data: Contract) {
+  async function handleSubmit(
+    data: Contract
+  ) {
     try {
       if (editingContract) {
-        await contractRepository.updateContract(editingContract.id, data);
-        toast.success("Contrato atualizado");
+        await contractRepository.updateContract(
+          editingContract.id,
+          data
+        );
+
+        toast.success(
+          "Contrato atualizado"
+        );
+
         setEditingContract(null);
       } else {
-        await contractRepository.createContract({
-          ...data,
-          createdAt: new Date().toISOString(),
-        });
-        toast.success("Contrato criado");
+        const {
+          id,
+          createdAt,
+          ...contractData
+        } = data;
+
+        await contractRepository.createContract(
+          contractData
+        );
+
+        toast.success(
+          "Contrato criado"
+        );
       }
 
       await loadContracts();
     } catch (error) {
-      console.error("Erro ao salvar contrato:", error);
-      toast.error("Erro ao salvar contrato");
+      console.error(
+        "Erro ao salvar contrato:",
+        error
+      );
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Erro ao salvar contrato"
+      );
     }
   }
 
@@ -64,29 +97,51 @@ export default function ContractsPage() {
     try {
       setDeleteLoading(true);
 
-      await contractRepository.deleteContract(contractToDelete.id);
-
-      setContracts((prev) =>
-        prev.filter((c) => c.id !== contractToDelete.id)
+      await contractRepository.deleteContract(
+        contractToDelete.id
       );
 
-      toast.success("Contrato excluído");
+      setContracts((prev) =>
+        prev.filter(
+          (contract) =>
+            contract.id !==
+            contractToDelete.id
+        )
+      );
+
+      toast.success(
+        "Contrato excluído"
+      );
 
       setContractToDelete(null);
     } catch (error) {
-      console.error("Erro ao excluir contrato:", error);
-      toast.error("Erro ao excluir contrato");
+      console.error(
+        "Erro ao excluir contrato:",
+        error
+      );
+
+      toast.error(
+        "Erro ao excluir contrato"
+      );
     } finally {
       setDeleteLoading(false);
     }
   }
 
-  function handleEdit(contract: Contract) {
+  function handleEdit(
+    contract: Contract
+  ) {
     setEditingContract(contract);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
-  function handleDelete(contract: Contract) {
+  function handleDelete(
+    contract: Contract
+  ) {
     setContractToDelete(contract);
   }
 
@@ -99,11 +154,12 @@ export default function ContractsPage() {
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          
           <div className="w-full">
             <ContractForm
               onSubmit={handleSubmit}
-              editingContract={editingContract}
+              editingContract={
+                editingContract
+              }
               onFinish={() => {}}
             />
           </div>
@@ -123,9 +179,12 @@ export default function ContractsPage() {
         title="Excluir contrato"
         description={`Tem certeza que deseja excluir o contrato de "${contractToDelete?.clientName}"?`}
         onConfirm={confirmDelete}
-        onClose={() => setContractToDelete(null)}
+        onClose={() =>
+          setContractToDelete(null)
+        }
         loading={deleteLoading}
       />
     </>
   );
 }
+

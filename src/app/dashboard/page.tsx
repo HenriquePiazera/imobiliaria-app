@@ -150,7 +150,7 @@ export default function DashboardPage() {
           "Disponível"
       ).length;
     }, [properties]);
-
+    
   if (loading) {
     return (
       <div

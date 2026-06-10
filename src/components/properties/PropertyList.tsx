@@ -5,9 +5,7 @@ import { PropertyCard } from "./PropertyCard";
 
 type PropertyListProps = {
   properties: Property[];
-
   onEdit: (property: Property) => void;
-
   onDelete: (id: string) => void;
 };
 

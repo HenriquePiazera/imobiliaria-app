@@ -1,18 +1,21 @@
+export type ContractType = "rent" | "sale";
+
+export type ContractStatus = "active" | "finished" | "canceled";
+
 export interface Contract {
   id: string;
 
   clientId: string;
-  clientName?: string;
-
   propertyId: string;
+
+  clientName?: string;
   propertyTitle?: string;
+
+  type: ContractType;
 
   value: number;
 
-  status:
-    | "active"
-    | "finished"
-    | "canceled";
+  status: ContractStatus;
 
   startDate: string;
   endDate?: string;
