@@ -1,4 +1,4 @@
-import { DashboardStat } from "@/domain/dashboard/dashboard.types";
+import { DashboardStat } from "@/types/dashboard";
 
 import { MetricCard }
 from "./MetricCard";

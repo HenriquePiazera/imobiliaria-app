@@ -1,4 +1,4 @@
-import { DashboardStat } from "@/domain/dashboard/dashboard.types";
+import { DashboardStat } from "@/types/dashboard";
 
 import { ClientRepository } from "@/repositories/clients/client.repository";
 import { PropertyRepository } from "@/repositories/properties/property.repository";
