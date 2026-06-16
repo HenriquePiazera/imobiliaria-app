@@ -1,8 +1,11 @@
-import { DashboardStat } from "@/domain/dashboard/dashboard.types";
+import { DashboardStat } from "@/types/dashboard";
 
 import { ClientRepository } from "@/repositories/clients/client.repository";
 import { PropertyRepository } from "@/repositories/properties/property.repository";
 import { ContractRepository } from "@/repositories/contracts/contract.repository";
+
+const clientRepository =
+  new ClientRepository();
 
 const propertyRepository =
   new PropertyRepository();
@@ -11,21 +14,24 @@ const contractRepository =
   new ContractRepository();
 
 export class DashboardService {
-  async getDashboardStats(): Promise<DashboardStat[]> {
+  async getDashboardStats(): Promise<
+    DashboardStat[]
+  > {
     const [
       clients,
       properties,
       contracts,
     ] = await Promise.all([
-      ClientRepository.getClients(),
+      clientRepository.getClients(),
       propertyRepository.getProperties(),
       contractRepository.getContracts(),
     ]);
 
-    const soldProperties = properties.filter(
-      (property) =>
-        property.status === "Vendido"
-    );
+    const soldProperties =
+      properties.filter(
+        (property) =>
+          property.status === "Vendido"
+      );
 
     return [
       {

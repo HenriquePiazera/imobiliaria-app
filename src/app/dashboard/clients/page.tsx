@@ -5,31 +5,39 @@ import { useEffect, useMemo, useState } from "react";
 import { ClientForm } from "@/components/clients/ClientForm";
 import { ClientList } from "@/components/clients/ClientList";
 
-import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 import { ClientRepository } from "@/repositories/clients/client.repository";
 
 import { Client } from "@/types/client";
 
+const clientRepository =
+  new ClientRepository();
+
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] =
+    useState("");
 
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "lead" | "client" | "inactive"
-  >("all");
+  const [statusFilter, setStatusFilter] =
+    useState<
+      | "all"
+      | "lead"
+      | "client"
+      | "inactive"
+    >("all");
 
   const [editingClient, setEditingClient] =
     useState<Client | null>(null);
 
-  const [clientToEdit, setClientToEdit] =
-    useState<Client | null>(null);
-
-  const [clientToDelete, setClientToDelete] =
-    useState<Client | null>(null);
+  const [
+    clientToDelete,
+    setClientToDelete,
+  ] = useState<Client | null>(null);
 
   useEffect(() => {
     loadClients();
@@ -40,7 +48,7 @@ export default function ClientsPage() {
       setLoading(true);
 
       const data =
-        await ClientRepository.getClients();
+        await clientRepository.getClients();
 
       setClients(data);
     } catch (error) {
@@ -57,14 +65,15 @@ export default function ClientsPage() {
       setLoading(true);
 
       if (editingClient) {
-        await ClientRepository.updateClient(
+        await clientRepository.updateClient(
           editingClient.id,
           data
         );
 
         setClients((prev) =>
           prev.map((client) =>
-            client.id === editingClient.id
+            client.id ===
+            editingClient.id
               ? {
                   ...client,
                   ...data,
@@ -78,19 +87,20 @@ export default function ClientsPage() {
         return;
       }
 
+      const createdAt =
+        new Date().toISOString();
+
       const createdClient =
-        await ClientRepository.createClient({
+        await clientRepository.createClient({
           ...data,
-          createdAt:
-            new Date().toISOString(),
+          createdAt,
         });
 
       setClients((prev) => [
         {
           id: createdClient.id,
           ...data,
-          createdAt:
-            new Date().toISOString(),
+          createdAt,
         },
         ...prev,
       ]);
@@ -105,14 +115,14 @@ export default function ClientsPage() {
     if (!clientToDelete) return;
 
     try {
-      await ClientRepository.deleteClient(
+      await clientRepository.deleteClient(
         clientToDelete.id
       );
 
       setClients((prev) =>
         prev.filter(
-          (item) =>
-            item.id !==
+          (client) =>
+            client.id !==
             clientToDelete.id
         )
       );
@@ -178,7 +188,8 @@ export default function ClientsPage() {
 
             <ClientForm
               initialData={
-                editingClient || undefined
+                editingClient ||
+                undefined
               }
               onSubmit={handleSubmit}
               loading={loading}
@@ -271,7 +282,7 @@ export default function ClientsPage() {
                   filteredClients
                 }
                 onEdit={
-                  setClientToEdit
+                  setEditingClient
                 }
                 onDelete={
                   setClientToDelete
@@ -281,67 +292,6 @@ export default function ClientsPage() {
           </div>
         </div>
       </div>
-
-      {clientToEdit && (
-        <div
-          className="
-            fixed inset-0 z-50
-            flex items-center justify-center
-            bg-black/50
-            p-4
-          "
-        >
-          <div
-            className="
-              w-full max-w-md
-              rounded-2xl
-              bg-white
-              p-6
-              shadow-xl
-            "
-          >
-            <h2 className="text-xl font-semibold text-zinc-900">
-              Confirmar edição
-            </h2>
-
-            <p className="mt-3 text-sm text-zinc-600">
-              Deseja editar o cliente{" "}
-              <strong>
-                {clientToEdit.name}
-              </strong>
-              ?
-            </p>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <Button
-                type="button"
-                onClick={() =>
-                  setClientToEdit(
-                    null
-                  )
-                }
-              >
-                Cancelar
-              </Button>
-
-              <Button
-                type="button"
-                onClick={() => {
-                  setEditingClient(
-                    clientToEdit
-                  );
-
-                  setClientToEdit(
-                    null
-                  );
-                }}
-              >
-                Editar
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {clientToDelete && (
         <div

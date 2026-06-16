@@ -1,36 +1,48 @@
 import {
   collection,
   getDocs,
-  query,
-  orderBy,
   limit,
+  orderBy,
+  query,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
 
 import { Property } from "@/types/property";
 
+const propertiesCollection = collection(
+  db,
+  "properties"
+);
+
 export class DashboardRepository {
   async getTotalProperties(): Promise<number> {
     const snapshot = await getDocs(
-      collection(db, "properties")
+      propertiesCollection
     );
 
     return snapshot.size;
   }
 
-  async getRecentProperties(): Promise<Property[]> {
-    const q = query(
-      collection(db, "properties"),
+  async getRecentProperties(): Promise<
+    Property[]
+  > {
+    const propertiesQuery = query(
+      propertiesCollection,
       orderBy("createdAt", "desc"),
       limit(5)
     );
 
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(
+      propertiesQuery
+    );
 
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Property[];
+    return snapshot.docs.map(
+      (document) =>
+        ({
+          id: document.id,
+          ...document.data(),
+        }) as Property
+    );
   }
 }

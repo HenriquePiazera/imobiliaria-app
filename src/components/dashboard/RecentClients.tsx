@@ -1,4 +1,4 @@
-import { Client }from "@/domain/clients/client.types";
+import { Client }from "@/types/client";
 
 import { Card } from "@/components/ui/Card";
 
