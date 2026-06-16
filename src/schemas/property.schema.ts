@@ -14,8 +14,10 @@ export const propertySchema = z.object({
     "Aluguel",
   ]),
 
-  price: z.coerce
-    .number()
+  price: z
+    .number({
+      error: "Preço obrigatório",
+    })
     .min(1, "Preço obrigatório"),
 
   city: z

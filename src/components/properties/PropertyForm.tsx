@@ -16,15 +16,28 @@ import {
 import { Property } from "@/types/property";
 
 import { Input } from "@/components/ui/Input";
-
 import { Button } from "@/components/ui/Button";
-
 import { Card } from "@/components/ui/Card";
 
 type PropertyFormProps = {
-  onSubmit: (data: PropertyFormData) => Promise<void>;
+  onSubmit: (
+    data: PropertyFormData
+  ) => Promise<void>;
+
   onFinish?: () => void;
+
   editingProperty?: Property | null;
+};
+
+const defaultValues: PropertyFormData = {
+  title: "",
+  type: "",
+  purpose: "Venda",
+  price: 0,
+  city: "",
+  district: "",
+  status: "Disponível",
+  description: "",
 };
 
 export function PropertyForm({
@@ -32,12 +45,17 @@ export function PropertyForm({
   onFinish,
   editingProperty = null,
 }: PropertyFormProps) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const { register, handleSubmit, reset } =
-    useForm<PropertyFormData>({
-      resolver: zodResolver(propertySchema) as any,
-    });
+  const {
+    register,
+    handleSubmit,
+    reset,
+  } = useForm<PropertyFormData>({
+    resolver: zodResolver(propertySchema),
+    defaultValues,
+  });
 
   useEffect(() => {
     if (editingProperty) {
@@ -49,89 +67,120 @@ export function PropertyForm({
         city: editingProperty.city,
         district: editingProperty.district,
         status: editingProperty.status,
-        description: editingProperty.description,
+        description:
+          editingProperty.description,
       });
-    } else {
-      reset({
-        title: "",
-        type: "",
-        purpose: "Venda",
-        price: 0,
-        city: "",
-        district: "",
-        status: "Disponível",
-        description: "",
-      });
+
+      return;
     }
+
+    reset(defaultValues);
   }, [editingProperty, reset]);
 
-  const handleFormSubmit: SubmitHandler<PropertyFormData> = async (data) => {
-    try {
-      setLoading(true);
+  const handleFormSubmit:
+    SubmitHandler<PropertyFormData> =
+    async (data) => {
+      try {
+        setLoading(true);
 
-      await onSubmit(data);
+        await onSubmit(data);
 
-      toast.success(
-        editingProperty ? "Imóvel atualizado" : "Imóvel cadastrado"
-      );
+        toast.success(
+          editingProperty
+            ? "Imóvel atualizado"
+            : "Imóvel cadastrado"
+        );
 
-      reset({
-        title: "",
-        type: "",
-        purpose: "Venda",
-        price: 0,
-        city: "",
-        district: "",
-        status: "Disponível",
-        description: "",
-      });
+        reset(defaultValues);
 
-      onFinish?.();
-    } catch {
-      toast.error("Erro ao salvar imóvel");
-    } finally {
-      setLoading(false);
-    }
-  };
+        onFinish?.();
+      } catch {
+        toast.error(
+          "Erro ao salvar imóvel"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <Card>
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-        <Input placeholder="Título" {...register("title")} />
+      <form
+        onSubmit={handleSubmit(
+          handleFormSubmit
+        )}
+        className="space-y-4"
+      >
+        <Input
+          placeholder="Título"
+          {...register("title")}
+        />
 
-        <Input placeholder="Tipo" {...register("type")} />
+        <Input
+          placeholder="Tipo"
+          {...register("type")}
+        />
 
         <select
           {...register("purpose")}
           className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
         >
-          <option value="Venda">Venda</option>
-          <option value="Aluguel">Aluguel</option>
+          <option value="Venda">
+            Venda
+          </option>
+
+          <option value="Aluguel">
+            Aluguel
+          </option>
         </select>
 
         <Input
           type="number"
           placeholder="Preço"
-          {...register("price", { valueAsNumber: true })}
+          {...register("price", {
+            valueAsNumber: true,
+          })}
         />
 
-        <Input placeholder="Cidade" {...register("city")} />
+        <Input
+          placeholder="Cidade"
+          {...register("city")}
+        />
 
-        <Input placeholder="Bairro" {...register("district")} />
+        <Input
+          placeholder="Bairro"
+          {...register("district")}
+        />
 
         <select
           {...register("status")}
           className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
         >
-          <option value="Disponível">Disponível</option>
-          <option value="Vendido">Vendido</option>
-          <option value="Alugado">Alugado</option>
+          <option value="Disponível">
+            Disponível
+          </option>
+
+          <option value="Vendido">
+            Vendido
+          </option>
+
+          <option value="Alugado">
+            Alugado
+          </option>
         </select>
 
-        <Input placeholder="Descrição" {...register("description")} />
+        <Input
+          placeholder="Descrição"
+          {...register("description")}
+        />
 
-        <Button type="submit" loading={loading}>
-          {editingProperty ? "Atualizar Imóvel" : "Cadastrar Imóvel"}
+        <Button
+          type="submit"
+          loading={loading}
+        >
+          {editingProperty
+            ? "Atualizar Imóvel"
+            : "Cadastrar Imóvel"}
         </Button>
       </form>
     </Card>
