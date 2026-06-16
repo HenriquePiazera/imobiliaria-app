@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-import { useForm, SubmitHandler } from "react-hook-form";
-
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { toast } from "sonner";
 
 import {
@@ -18,14 +15,11 @@ import { Property } from "@/types/property";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ImageUpload } from "./ImageUpload";
 
-type PropertyFormProps = {
-  onSubmit: (
-    data: PropertyFormData
-  ) => Promise<void>;
-
+type Props = {
+  onSubmit: (data: PropertyFormData) => Promise<void>;
   onFinish?: () => void;
-
   editingProperty?: Property | null;
 };
 
@@ -38,149 +32,94 @@ const defaultValues: PropertyFormData = {
   district: "",
   status: "Disponível",
   description: "",
+  imageUrl: "",
 };
 
 export function PropertyForm({
   onSubmit,
   onFinish,
-  editingProperty = null,
-}: PropertyFormProps) {
-  const [loading, setLoading] =
-    useState(false);
+  editingProperty,
+}: Props) {
+  const [loading, setLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-  } = useForm<PropertyFormData>({
-    resolver: zodResolver(propertySchema),
-    defaultValues,
-  });
+  const { register, handleSubmit, reset } =
+    useForm<PropertyFormData>({
+      resolver: zodResolver(propertySchema),
+      defaultValues,
+    });
 
   useEffect(() => {
-    if (editingProperty) {
-      reset({
-        title: editingProperty.title,
-        type: editingProperty.type,
-        purpose: editingProperty.purpose,
-        price: editingProperty.price,
-        city: editingProperty.city,
-        district: editingProperty.district,
-        status: editingProperty.status,
-        description:
-          editingProperty.description,
-      });
-
+    if (!editingProperty) {
+      reset(defaultValues);
+      setImageUrl("");
       return;
     }
 
-    reset(defaultValues);
+    reset({
+      title: editingProperty.title,
+      type: editingProperty.type,
+      purpose: editingProperty.purpose,
+      price: editingProperty.price,
+      city: editingProperty.city,
+      district: editingProperty.district,
+      status: editingProperty.status,
+      description: editingProperty.description,
+      imageUrl: editingProperty.imageUrl ?? "",
+    });
+
+    setImageUrl(editingProperty.imageUrl ?? "");
   }, [editingProperty, reset]);
 
-  const handleFormSubmit:
-    SubmitHandler<PropertyFormData> =
-    async (data) => {
-      try {
-        setLoading(true);
+  async function handleForm(data: PropertyFormData) {
+    try {
+      setLoading(true);
 
-        await onSubmit(data);
+      await onSubmit({
+        ...data,
+        imageUrl,
+      });
 
-        toast.success(
-          editingProperty
-            ? "Imóvel atualizado"
-            : "Imóvel cadastrado"
-        );
+      toast.success(editingProperty ? "Atualizado" : "Criado");
 
-        reset(defaultValues);
+      reset(defaultValues);
+      setImageUrl("");
 
-        onFinish?.();
-      } catch {
-        toast.error(
-          "Erro ao salvar imóvel"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+      onFinish?.();
+    } catch {
+      toast.error("Erro ao salvar");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <Card>
-      <form
-        onSubmit={handleSubmit(
-          handleFormSubmit
-        )}
-        className="space-y-4"
-      >
-        <Input
-          placeholder="Título"
-          {...register("title")}
-        />
+      <form onSubmit={handleSubmit(handleForm)} className="space-y-4">
+        <Input placeholder="Título" {...register("title")} />
+        <Input placeholder="Tipo" {...register("type")} />
 
-        <Input
-          placeholder="Tipo"
-          {...register("type")}
-        />
-
-        <select
-          {...register("purpose")}
-          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-        >
-          <option value="Venda">
-            Venda
-          </option>
-
-          <option value="Aluguel">
-            Aluguel
-          </option>
+        <select {...register("purpose")} className="input">
+          <option value="Venda">Venda</option>
+          <option value="Aluguel">Aluguel</option>
         </select>
 
-        <Input
-          type="number"
-          placeholder="Preço"
-          {...register("price", {
-            valueAsNumber: true,
-          })}
-        />
+        <Input type="number" {...register("price", { valueAsNumber: true })} />
+        <Input placeholder="Cidade" {...register("city")} />
+        <Input placeholder="Bairro" {...register("district")} />
 
-        <Input
-          placeholder="Cidade"
-          {...register("city")}
-        />
-
-        <Input
-          placeholder="Bairro"
-          {...register("district")}
-        />
-
-        <select
-          {...register("status")}
-          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-        >
-          <option value="Disponível">
-            Disponível
-          </option>
-
-          <option value="Vendido">
-            Vendido
-          </option>
-
-          <option value="Alugado">
-            Alugado
-          </option>
+        <select {...register("status")} className="input">
+          <option value="Disponível">Disponível</option>
+          <option value="Vendido">Vendido</option>
+          <option value="Alugado">Alugado</option>
         </select>
 
-        <Input
-          placeholder="Descrição"
-          {...register("description")}
-        />
+        <Input placeholder="Descrição" {...register("description")} />
 
-        <Button
-          type="submit"
-          loading={loading}
-        >
-          {editingProperty
-            ? "Atualizar Imóvel"
-            : "Cadastrar Imóvel"}
+        <ImageUpload onUpload={setImageUrl} />
+
+        <Button type="submit" loading={loading}>
+          {editingProperty ? "Atualizar" : "Cadastrar"}
         </Button>
       </form>
     </Card>

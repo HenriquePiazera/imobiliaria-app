@@ -10,65 +10,29 @@ import {
 import { db } from "@/lib/firebase";
 import { Property } from "@/types/property";
 
-const propertiesCollection =
-  collection(
-    db,
-    "properties"
-  );
+const propertiesCollection = collection(db, "properties");
 
 export class PropertyRepository {
-  async getProperties(): Promise<
-    Property[]
-  > {
-    const snapshot = await getDocs(
-      propertiesCollection
-    );
+  async getProperties(): Promise<Property[]> {
+    const snapshot = await getDocs(propertiesCollection);
 
-    return snapshot.docs.map(
-      (document) =>
-        ({
-          ...document.data(),
-          id: document.id,
-        }) as Property
-    );
+    return snapshot.docs.map((doc) => ({
+      ...(doc.data() as Omit<Property, "id">),
+      id: doc.id,
+    }));
   }
 
-  async createProperty(
-    data: Omit<Property, "id">
-  ) {
-    return await addDoc(
-      propertiesCollection,
-      data
-    );
+  async createProperty(data: Omit<Property, "id">) {
+    return addDoc(propertiesCollection, data);
   }
 
-  async updateProperty(
-    id: string,
-    data: Partial<Property>
-  ) {
-    const propertyRef = doc(
-      db,
-      "properties",
-      id
-    );
-
-    return await updateDoc(
-      propertyRef,
-      data
-    );
+  async updateProperty(id: string, data: Partial<Property>) {
+    const ref = doc(db, "properties", id);
+    return updateDoc(ref, data);
   }
 
-  async deleteProperty(
-    id: string
-  ) {
-    const propertyRef = doc(
-      db,
-      "properties",
-      id
-    );
-
-    return await deleteDoc(
-      propertyRef
-    );
+  async deleteProperty(id: string) {
+    const ref = doc(db, "properties", id);
+    return deleteDoc(ref);
   }
 }

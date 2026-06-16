@@ -1,186 +1,67 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { toast } from "sonner";
 
 import { PropertyForm } from "@/components/properties/PropertyForm";
 import { PropertyList } from "@/components/properties/PropertyList";
-
-import { DeleteModal } from "@/components/ui/DeleteModal";
 import { PageTitle } from "@/components/ui/PageTitle";
 
 import { PropertyRepository } from "@/repositories/properties/property.repository";
-
+import { Property } from "@/types/property";
 import { PropertyFormData } from "@/schemas/property.schema";
 
-import { Property } from "@/types/property";
-
-const propertyRepository = new PropertyRepository();
+const repo = new PropertyRepository();
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [editingProperty, setEditingProperty] =
-    useState<Property | null>(null);
+  const [editing, setEditing] = useState<Property | null>(null);
 
-  const [propertyToDelete, setPropertyToDelete] =
-    useState<Property | null>(null);
-
-  const [deleteLoading, setDeleteLoading] =
-    useState(false);
+  async function load() {
+    const data = await repo.getProperties();
+    setProperties(data);
+  }
 
   useEffect(() => {
-    loadProperties();
+    load();
   }, []);
 
-  async function loadProperties() {
+  async function handleSubmit(data: PropertyFormData) {
     try {
-      const data =
-        await propertyRepository.getProperties();
-
-      setProperties(data);
-    } catch (error) {
-      console.error(
-        "Erro ao carregar imóveis:",
-        error
-      );
-    }
-  }
-
-  async function handleSubmit(
-    data: PropertyFormData
-  ) {
-    try {
-      if (editingProperty) {
-        await propertyRepository.updateProperty(
-          editingProperty.id,
-          data
-        );
-
-        toast.success("Imóvel atualizado");
-
-        setEditingProperty(null);
+      if (editing) {
+        await repo.updateProperty(editing.id, data);
+        toast.success("Atualizado");
+        setEditing(null);
       } else {
-        await propertyRepository.createProperty({
+        await repo.createProperty({
           ...data,
-          images: [],
           createdAt: new Date().toISOString(),
-        });
+        } as any);
 
-        toast.success("Imóvel cadastrado");
+        toast.success("Criado");
       }
 
-      await loadProperties();
-    } catch (error) {
-      console.error(
-        "Erro ao salvar imóvel:",
-        error
-      );
-
-      toast.error(
-        "Erro ao salvar imóvel"
-      );
+      await load();
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro");
     }
-  }
-
-  async function confirmDelete() {
-    if (!propertyToDelete) return;
-
-    try {
-      setDeleteLoading(true);
-
-      await propertyRepository.deleteProperty(
-        propertyToDelete.id
-      );
-
-      setProperties((prev) =>
-        prev.filter(
-          (property) =>
-            property.id !==
-            propertyToDelete.id
-        )
-      );
-
-      toast.success("Imóvel excluído");
-
-      setPropertyToDelete(null);
-    } catch (error) {
-      console.error(
-        "Erro ao excluir imóvel:",
-        error
-      );
-
-      toast.error(
-        "Erro ao excluir imóvel"
-      );
-    } finally {
-      setDeleteLoading(false);
-    }
-  }
-
-  function handleEdit(
-    property: Property
-  ) {
-    setEditingProperty(property);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }
-
-  function handleDelete(
-    property: Property
-  ) {
-    setPropertyToDelete(property);
   }
 
   return (
-    <>
-      <div className="space-y-6">
-        <PageTitle
-          title="Imóveis"
-          subtitle="Gerencie os imóveis cadastrados"
-        />
+    <div className="space-y-6">
+      <PageTitle title="Imóveis" subtitle="Gestão de imóveis" />
 
-        <div
-          className="
-            grid
-            grid-cols-1
-            lg:grid-cols-2
-            gap-6
-            items-start
-          "
-        >
-          <div className="w-full">
-            <PropertyForm
-              onSubmit={handleSubmit}
-              editingProperty={
-                editingProperty
-              }
-            />
-          </div>
-
-          <div className="w-full">
-            <PropertyList
-              properties={properties}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          </div>
-        </div>
-      </div>
-
-      <DeleteModal
-        open={!!propertyToDelete}
-        title="Excluir imóvel"
-        description={`Tem certeza que deseja excluir o imóvel "${propertyToDelete?.title}"?`}
-        onConfirm={confirmDelete}
-        onClose={() =>
-          setPropertyToDelete(null)
-        }
-        loading={deleteLoading}
+      <PropertyForm
+        onSubmit={handleSubmit}
+        editingProperty={editing}
       />
-    </>
+
+      <PropertyList
+        properties={properties}
+        onEdit={setEditing}
+        onDelete={() => {}}
+      />
+    </div>
   );
 }
