@@ -35,6 +35,10 @@ export const propertySchema = z.object({
   description: z
     .string()
     .min(5, "Descrição obrigatória"),
+
+  imageUrl: z
+    .string()
+    .optional(),
 });
 
 export type PropertyFormData =

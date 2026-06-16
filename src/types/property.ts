@@ -20,5 +20,7 @@ export interface Property {
 
   description: string;
 
+  images: string[];
+
   createdAt: string;
 }
