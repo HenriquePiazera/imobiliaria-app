@@ -3,6 +3,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   query,
   updateDoc,
@@ -10,7 +11,12 @@ import {
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
-import { Contract } from "@/types/contract";
+
+import {
+  Contract,
+  ContractStatus,
+  ContractType,
+} from "@/types/contract";
 
 const contractsCollection = collection(
   db,
@@ -37,6 +43,43 @@ export class ContractRepository {
           id: document.id,
         }) as Contract
     );
+  }
+
+  private async updatePropertyStatus(
+    propertyId: string,
+    contractType: ContractType,
+    contractStatus: ContractStatus
+  ) {
+    const propertyRef = doc(
+      db,
+      "properties",
+      propertyId
+    );
+
+    let propertyStatus:
+      | "Disponível"
+      | "Alugado"
+      | "Vendido";
+
+    if (contractStatus === "active") {
+      propertyStatus =
+        contractType === "sale"
+          ? "Vendido"
+          : "Alugado";
+    } else if (
+      contractStatus === "finished"
+    ) {
+      propertyStatus =
+        contractType === "sale"
+          ? "Vendido"
+          : "Disponível";
+    } else {
+      propertyStatus = "Disponível";
+    }
+
+    await updateDoc(propertyRef, {
+      status: propertyStatus,
+    });
   }
 
   async createContract(
@@ -77,18 +120,11 @@ export class ContractRepository {
         }
       );
 
-    const propertyRef = doc(
-      db,
-      "properties",
-      data.propertyId
+    await this.updatePropertyStatus(
+      data.propertyId,
+      data.type,
+      data.status
     );
-
-    await updateDoc(propertyRef, {
-      status:
-        data.type === "sale"
-          ? "Vendido"
-          : "Alugado",
-    });
 
     return contractRef;
   }
@@ -103,47 +139,40 @@ export class ContractRepository {
       id
     );
 
+    const snapshot =
+      await getDoc(contractRef);
+
+    if (!snapshot.exists()) {
+      throw new Error(
+        "Contrato não encontrado."
+      );
+    }
+
+    const currentContract =
+      snapshot.data() as Contract;
+
     await updateDoc(
       contractRef,
       data
     );
 
-    if (
-      data.status &&
-      data.propertyId
-    ) {
-      const propertyRef = doc(
-        db,
-        "properties",
-        data.propertyId
-      );
+    const propertyId =
+      data.propertyId ??
+      currentContract.propertyId;
 
-      if (
-        data.status === "canceled"
-      ) {
-        await updateDoc(
-          propertyRef,
-          {
-            status:
-              "Disponível",
-          }
-        );
-      }
+    const contractType =
+      data.type ??
+      currentContract.type;
 
-      if (
-        data.status === "finished"
-      ) {
-        await updateDoc(
-          propertyRef,
-          {
-            status:
-              data.type === "sale"
-                ? "Vendido"
-                : "Disponível",
-          }
-        );
-      }
-    }
+    const contractStatus =
+      data.status ??
+      currentContract.status;
+
+    await this.updatePropertyStatus(
+      propertyId,
+      contractType,
+      contractStatus
+    );
   }
 
   async deleteContract(
@@ -155,8 +184,27 @@ export class ContractRepository {
       id
     );
 
-    return await deleteDoc(
-      contractRef
+    const snapshot =
+      await getDoc(contractRef);
+
+    if (!snapshot.exists()) {
+      return;
+    }
+
+    const contract =
+      snapshot.data() as Contract;
+
+    await deleteDoc(contractRef);
+
+    await updateDoc(
+      doc(
+        db,
+        "properties",
+        contract.propertyId
+      ),
+      {
+        status: "Disponível",
+      }
     );
   }
 }
