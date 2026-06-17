@@ -1,47 +1,21 @@
 import { z } from "zod";
 
 export const propertySchema = z.object({
-  title: z
-    .string()
-    .min(3, "Título muito curto"),
+  title: z.string().min(3),
+  type: z.string().min(2),
 
-  type: z
-    .string()
-    .min(2, "Tipo obrigatório"),
+  purpose: z.enum(["Venda", "Aluguel"]),
 
-  purpose: z.enum([
-    "Venda",
-    "Aluguel",
-  ]),
+  price: z.number().min(1),
 
-  price: z
-    .number({
-      error: "Preço obrigatório",
-    })
-    .min(1, "Preço obrigatório"),
+  city: z.string().min(2),
+  district: z.string().min(2),
 
-  city: z
-    .string()
-    .min(2, "Cidade obrigatória"),
+  status: z.enum(["Disponível", "Vendido", "Alugado"]),
 
-  district: z
-    .string()
-    .min(2, "Bairro obrigatório"),
+  description: z.string().min(5),
 
-  status: z.enum([
-    "Disponível",
-    "Vendido",
-    "Alugado",
-  ]),
-
-  description: z
-    .string()
-    .min(5, "Descrição obrigatória"),
-
-  imageUrl: z
-    .string()
-    .optional(),
+  imageUrl: z.string().optional(),
 });
 
-export type PropertyFormData =
-  z.infer<typeof propertySchema>;
+export type PropertyFormData = z.infer<typeof propertySchema>;

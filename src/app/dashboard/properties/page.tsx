@@ -1,81 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PropertyForm } from "@/components/properties/PropertyForm";
 import { PropertyList } from "@/components/properties/PropertyList";
 
-import { DeleteModal } from "@/components/ui/DeleteModal";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { PageTitle } from "@/components/ui/PageTitle";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 import { PropertyRepository } from "@/repositories/properties/property.repository";
 
+import { Property } from "@/types/property";
 import { PropertyFormData } from "@/schemas/property.schema";
 
-import { Property } from "@/types/property";
-
-const propertyRepository = new PropertyRepository();
+const repo = new PropertyRepository();
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [editingProperty, setEditingProperty] =
-    useState<Property | null>(null);
+  const [editing, setEditing] = useState<Property | null>(null);
+
+  const [search, setSearch] = useState("");
 
   const [propertyToDelete, setPropertyToDelete] =
     useState<Property | null>(null);
 
-  const [deleteLoading, setDeleteLoading] =
-    useState(false);
+  async function load() {
+    const data = await repo.getProperties();
+    setProperties(data);
+  }
 
   useEffect(() => {
-    loadProperties();
+    load();
   }, []);
-
-  async function loadProperties() {
-    try {
-      const data =
-        await propertyRepository.getProperties();
-
-      setProperties(data);
-    } catch (error) {
-      console.error(
-        "Erro ao carregar imóveis:",
-        error
-      );
-    }
-  }
 
   async function handleSubmit(
     data: PropertyFormData
   ) {
     try {
-      if (editingProperty) {
-        await propertyRepository.updateProperty(
-          editingProperty.id,
+      if (editing) {
+        await repo.updateProperty(
+          editing.id,
           data
         );
 
-        toast.success("Imóvel atualizado");
+        toast.success(
+          "Imóvel atualizado"
+        );
 
-        setEditingProperty(null);
+        setEditing(null);
       } else {
-        await propertyRepository.createProperty({
+        await repo.createProperty({
           ...data,
-          images: [],
-          createdAt: new Date().toISOString(),
-        });
+          createdAt:
+            new Date().toISOString(),
+        } as any);
 
-        toast.success("Imóvel cadastrado");
+        toast.success(
+          "Imóvel criado"
+        );
       }
 
-      await loadProperties();
+      await load();
     } catch (error) {
-      console.error(
-        "Erro ao salvar imóvel:",
-        error
-      );
+      console.error(error);
 
       toast.error(
         "Erro ao salvar imóvel"
@@ -87,100 +77,157 @@ export default function PropertiesPage() {
     if (!propertyToDelete) return;
 
     try {
-      setDeleteLoading(true);
-
-      await propertyRepository.deleteProperty(
+      await repo.deleteProperty(
         propertyToDelete.id
       );
 
-      setProperties((prev) =>
-        prev.filter(
-          (property) =>
-            property.id !==
-            propertyToDelete.id
-        )
+      toast.success(
+        "Imóvel excluído"
       );
-
-      toast.success("Imóvel excluído");
 
       setPropertyToDelete(null);
+
+      await load();
     } catch (error) {
-      console.error(
-        "Erro ao excluir imóvel:",
-        error
-      );
+      console.error(error);
 
       toast.error(
         "Erro ao excluir imóvel"
       );
-    } finally {
-      setDeleteLoading(false);
     }
   }
 
-  function handleEdit(
-    property: Property
-  ) {
-    setEditingProperty(property);
+  const filteredProperties =
+    useMemo(() => {
+      return properties.filter(
+        (property) => {
+          const searchText =
+            search.toLowerCase();
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }
-
-  function handleDelete(
-    property: Property
-  ) {
-    setPropertyToDelete(property);
-  }
+          return (
+            property.title
+              .toLowerCase()
+              .includes(searchText) ||
+            property.city
+              .toLowerCase()
+              .includes(searchText) ||
+            property.district
+              .toLowerCase()
+              .includes(searchText)
+          );
+        }
+      );
+    }, [properties, search]);
 
   return (
     <>
       <div className="space-y-6">
         <PageTitle
           title="Imóveis"
-          subtitle="Gerencie os imóveis cadastrados"
+          subtitle="Gestão de imóveis"
         />
 
-        <div
-          className="
-            grid
-            grid-cols-1
-            lg:grid-cols-2
-            gap-6
-            items-start
-          "
-        >
-          <div className="w-full">
+        <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold">
+              {editing
+                ? "Editar imóvel"
+                : "Novo imóvel"}
+            </h2>
+
             <PropertyForm
               onSubmit={handleSubmit}
               editingProperty={
-                editingProperty
+                editing
               }
             />
+
+            {editing && (
+              <div className="mt-4">
+                <Button
+                  type="button"
+                  onClick={() =>
+                    setEditing(
+                      null
+                    )
+                  }
+                >
+                  Cancelar edição
+                </Button>
+              </div>
+            )}
           </div>
 
-          <div className="w-full">
-            <PropertyList
-              properties={properties}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+              <Input
+                placeholder="Buscar imóvel..."
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+              />
+            </div>
+
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">
+                  Imóveis cadastrados
+                </h2>
+
+                <span className="text-sm text-zinc-500">
+                  {
+                    filteredProperties.length
+                  }{" "}
+                  registros
+                </span>
+              </div>
+
+              <PropertyList
+                properties={
+                  filteredProperties
+                }
+                onEdit={setEditing}
+                onDelete={(
+                  id
+                ) => {
+                  const property =
+                    properties.find(
+                      (p) =>
+                        p.id === id
+                    );
+
+                  if (
+                    property
+                  ) {
+                    setPropertyToDelete(
+                      property
+                    );
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <DeleteModal
-        open={!!propertyToDelete}
-        title="Excluir imóvel"
-        description={`Tem certeza que deseja excluir o imóvel "${propertyToDelete?.title}"?`}
-        onConfirm={confirmDelete}
-        onClose={() =>
-          setPropertyToDelete(null)
-        }
-        loading={deleteLoading}
-      />
+      {propertyToDelete && (
+        <ConfirmModal
+          open={true}
+          title="Confirmar exclusão"
+          description={`Deseja realmente excluir o imóvel "${propertyToDelete.title}"?`}
+          onConfirm={
+            confirmDelete
+          }
+          onClose={() =>
+            setPropertyToDelete(
+              null
+            )
+          }
+        />
+      )}
     </>
   );
 }
