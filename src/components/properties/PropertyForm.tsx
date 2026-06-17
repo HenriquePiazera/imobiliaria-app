@@ -12,6 +12,8 @@ import {
 
 import { Property } from "@/types/property";
 
+import { UploadImageService } from "@/services/upload/upload-image.service";
+
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -35,6 +37,20 @@ const defaultValues: PropertyFormData = {
   imageUrl: "",
 };
 
+const selectClassName = `
+  w-full
+  rounded-xl
+  border
+  border-zinc-300
+  bg-white
+  px-4
+  py-3
+  text-sm
+  outline-none
+  transition
+  focus:border-zinc-500
+`;
+
 export function PropertyForm({
   onSubmit,
   onFinish,
@@ -42,17 +58,23 @@ export function PropertyForm({
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [selectedFile, setSelectedFile] =
+    useState<File | null>(null);
 
-  const { register, handleSubmit, reset } =
-    useForm<PropertyFormData>({
-      resolver: zodResolver(propertySchema),
-      defaultValues,
-    });
+  const {
+    register,
+    handleSubmit,
+    reset,
+  } = useForm<PropertyFormData>({
+    resolver: zodResolver(propertySchema),
+    defaultValues,
+  });
 
   useEffect(() => {
     if (!editingProperty) {
       reset(defaultValues);
       setImageUrl("");
+      setSelectedFile(null);
       return;
     }
 
@@ -69,25 +91,49 @@ export function PropertyForm({
     });
 
     setImageUrl(editingProperty.imageUrl ?? "");
+    setSelectedFile(null);
   }, [editingProperty, reset]);
 
-  async function handleForm(data: PropertyFormData) {
+  async function handleForm(
+    data: PropertyFormData
+  ) {
     try {
       setLoading(true);
 
+      let uploadedImageUrl = imageUrl;
+
+      if (selectedFile) {
+        const uploadService =
+          new UploadImageService();
+
+        uploadedImageUrl =
+          await uploadService.upload(
+            selectedFile
+          );
+      }
+
       await onSubmit({
         ...data,
-        imageUrl,
+        imageUrl: uploadedImageUrl,
       });
 
-      toast.success(editingProperty ? "Atualizado" : "Criado");
+      toast.success(
+        editingProperty
+          ? "Imóvel atualizado com sucesso"
+          : "Imóvel cadastrado com sucesso"
+      );
 
       reset(defaultValues);
       setImageUrl("");
+      setSelectedFile(null);
 
       onFinish?.();
-    } catch {
-      toast.error("Erro ao salvar");
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        "Erro ao enviar imagem ou salvar imóvel"
+      );
     } finally {
       setLoading(false);
     }
@@ -95,31 +141,84 @@ export function PropertyForm({
 
   return (
     <Card>
-      <form onSubmit={handleSubmit(handleForm)} className="space-y-4">
-        <Input placeholder="Título" {...register("title")} />
-        <Input placeholder="Tipo" {...register("type")} />
+      <form
+        onSubmit={handleSubmit(handleForm)}
+        className="space-y-4"
+      >
+        <Input
+          placeholder="Título"
+          {...register("title")}
+        />
 
-        <select {...register("purpose")} className="input">
-          <option value="Venda">Venda</option>
-          <option value="Aluguel">Aluguel</option>
+        <Input
+          placeholder="Tipo"
+          {...register("type")}
+        />
+
+        <select
+          {...register("purpose")}
+          className={selectClassName}
+        >
+          <option value="Venda">
+            Venda
+          </option>
+
+          <option value="Aluguel">
+            Aluguel
+          </option>
         </select>
 
-        <Input type="number" {...register("price", { valueAsNumber: true })} />
-        <Input placeholder="Cidade" {...register("city")} />
-        <Input placeholder="Bairro" {...register("district")} />
+        <Input
+          type="number"
+          placeholder="Preço"
+          {...register("price", {
+            valueAsNumber: true,
+          })}
+        />
 
-        <select {...register("status")} className="input">
-          <option value="Disponível">Disponível</option>
-          <option value="Vendido">Vendido</option>
-          <option value="Alugado">Alugado</option>
+        <Input
+          placeholder="Cidade"
+          {...register("city")}
+        />
+
+        <Input
+          placeholder="Bairro"
+          {...register("district")}
+        />
+
+        <select
+          {...register("status")}
+          className={selectClassName}
+        >
+          <option value="Disponível">
+            Disponível
+          </option>
+
+          <option value="Vendido">
+            Vendido
+          </option>
+
+          <option value="Alugado">
+            Alugado
+          </option>
         </select>
 
-        <Input placeholder="Descrição" {...register("description")} />
+        <Input
+          placeholder="Descrição"
+          {...register("description")}
+        />
 
-        <ImageUpload onUpload={setImageUrl} />
+        <ImageUpload
+          onFileSelect={setSelectedFile}
+        />
 
-        <Button type="submit" loading={loading}>
-          {editingProperty ? "Atualizar" : "Cadastrar"}
+        <Button
+          type="submit"
+          loading={loading}
+        >
+          {editingProperty
+            ? "Atualizar imóvel"
+            : "Cadastrar imóvel"}
         </Button>
       </form>
     </Card>
