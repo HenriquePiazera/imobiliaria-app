@@ -10,29 +10,56 @@ export function FinancialSummary({
   const activeContracts =
     contracts.filter(
       (contract) =>
-        contract.status ===
-        "active"
+        contract.status === "active"
     );
+
+  const rentRevenue =
+    activeContracts
+      .filter(
+        (contract) =>
+          contract.type === "rent"
+      )
+      .reduce(
+        (total, contract) =>
+          total + contract.value,
+        0
+      );
+
+  const saleRevenue =
+    activeContracts
+      .filter(
+        (contract) =>
+          contract.type === "sale"
+      )
+      .reduce(
+        (total, contract) =>
+          total + contract.value,
+        0
+      );
 
   const totalRevenue =
-    activeContracts.reduce(
-      (total, contract) =>
-        total + contract.value,
-      0
-    );
+    rentRevenue + saleRevenue;
 
-  const averageRevenue =
-    activeContracts.length > 0
-      ? totalRevenue /
-        activeContracts.length
-      : 0;
+  function formatCurrency(
+    value: number
+  ) {
+    return value.toLocaleString(
+      "pt-BR",
+      {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 0,
+      }
+    );
+  }
 
   return (
     <div
       className="
-        bg-white
-        border
         rounded-2xl
+        border
+        border-zinc-200
+        bg-white
         p-6
         shadow-sm
         space-y-6
@@ -62,69 +89,96 @@ export function FinancialSummary({
         className="
           grid
           grid-cols-1
-          md:grid-cols-2
           gap-4
+          md:grid-cols-3
         "
       >
         <div
           className="
-            border
             rounded-xl
+            border
+            border-zinc-200
             p-5
           "
         >
           <p
             className="
+              mb-2
               text-sm
               text-zinc-500
-              mb-2
             "
           >
-            Receita mensal
+            Receita de aluguéis
           </p>
 
           <h3
             className="
-              text-3xl
+              text-2xl
               font-bold
             "
           >
-            R${" "}
-            {totalRevenue.toLocaleString(
-              "pt-BR"
+            {formatCurrency(
+              rentRevenue
             )}
           </h3>
         </div>
 
         <div
           className="
-            border
             rounded-xl
+            border
+            border-zinc-200
             p-5
           "
         >
           <p
             className="
+              mb-2
               text-sm
               text-zinc-500
-              mb-2
             "
           >
-            Média por contrato
+            Receita de vendas
           </p>
 
           <h3
             className="
-              text-3xl
+              text-2xl
               font-bold
             "
           >
-            R${" "}
-            {averageRevenue.toLocaleString(
-              "pt-BR",
-              {
-                maximumFractionDigits: 0,
-              }
+            {formatCurrency(
+              saleRevenue
+            )}
+          </h3>
+        </div>
+
+        <div
+          className="
+            rounded-xl
+            border
+            border-zinc-200
+            p-5
+          "
+        >
+          <p
+            className="
+              mb-2
+              text-sm
+              text-zinc-500
+            "
+          >
+            Receita total
+          </p>
+
+          <h3
+            className="
+              text-2xl
+              font-bold
+            "
+          >
+            {formatCurrency(
+              totalRevenue
             )}
           </h3>
         </div>
