@@ -18,24 +18,18 @@ import { Property } from "@/types/property";
 import { Contract } from "@/types/contract";
 
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
-
 import { RecentContracts } from "@/components/dashboard/RecentContracts";
-
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 
 export default function DashboardPage() {
   const [clients, setClients] =
     useState<Client[]>([]);
 
-  const [
-    properties,
-    setProperties,
-  ] = useState<Property[]>([]);
+  const [properties, setProperties] =
+    useState<Property[]>([]);
 
-  const [
-    contracts,
-    setContracts,
-  ] = useState<Contract[]>([]);
+  const [contracts, setContracts] =
+    useState<Contract[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -92,46 +86,41 @@ export default function DashboardPage() {
             ) as Contract[];
 
           setContracts(data);
-
           setLoading(false);
         }
       );
 
     return () => {
       unsubscribeClients();
-
       unsubscribeProperties();
-
       unsubscribeContracts();
     };
   }, []);
 
-  const activeContracts =
-    useMemo(() => {
-      return contracts.filter(
-        (contract) =>
-          contract.status ===
-          "active"
-      ).length;
-    }, [contracts]);
+  const leads = useMemo(() => {
+    return clients.filter(
+      (client) =>
+        client.status === "lead"
+    ).length;
+  }, [clients]);
 
-  const finishedContracts =
+  const inactiveClients =
     useMemo(() => {
-      return contracts.filter(
-        (contract) =>
-          contract.status ===
-          "finished"
+      return clients.filter(
+        (client) =>
+          client.status ===
+          "inactive"
       ).length;
-    }, [contracts]);
+    }, [clients]);
 
-  const canceledContracts =
+  const availableProperties =
     useMemo(() => {
-      return contracts.filter(
-        (contract) =>
-          contract.status ===
-          "canceled"
+      return properties.filter(
+        (property) =>
+          property.status ===
+          "Disponível"
       ).length;
-    }, [contracts]);
+    }, [properties]);
 
   const rentedProperties =
     useMemo(() => {
@@ -142,30 +131,26 @@ export default function DashboardPage() {
       ).length;
     }, [properties]);
 
-  const availableProperties =
+  const soldProperties =
     useMemo(() => {
       return properties.filter(
         (property) =>
           property.status ===
-          "Disponível"
+          "Vendido"
       ).length;
     }, [properties]);
-    
+
   if (loading) {
     return (
       <div
         className="
           flex
+          h-[60vh]
           items-center
           justify-center
-          h-[60vh]
         "
       >
-        <p
-          className="
-            text-zinc-500
-          "
-        >
+        <p className="text-zinc-500">
           Carregando dashboard...
         </p>
       </div>
@@ -184,11 +169,7 @@ export default function DashboardPage() {
           Dashboard
         </h1>
 
-        <p
-          className="
-            text-zinc-500
-          "
-        >
+        <p className="text-zinc-500">
           Visão geral da
           imobiliária
         </p>
@@ -198,9 +179,9 @@ export default function DashboardPage() {
         className="
           grid
           grid-cols-1
+          gap-6
           md:grid-cols-2
           xl:grid-cols-4
-          gap-6
         "
       >
         <DashboardCard
@@ -209,18 +190,18 @@ export default function DashboardPage() {
         />
 
         <DashboardCard
+          title="Leads"
+          value={leads}
+        />
+
+        <DashboardCard
+          title="Inativos"
+          value={inactiveClients}
+        />
+
+        <DashboardCard
           title="Imóveis"
           value={properties.length}
-        />
-
-        <DashboardCard
-          title="Contratos ativos"
-          value={activeContracts}
-        />
-
-        <DashboardCard
-          title="Imóveis alugados"
-          value={rentedProperties}
         />
       </div>
 
@@ -228,23 +209,29 @@ export default function DashboardPage() {
         className="
           grid
           grid-cols-1
-          md:grid-cols-3
           gap-6
+          md:grid-cols-2
+          xl:grid-cols-4
         "
       >
         <DashboardCard
-          title="Contratos finalizados"
-          value={finishedContracts}
-        />
-
-        <DashboardCard
-          title="Contratos cancelados"
-          value={canceledContracts}
+          title="Contratos"
+          value={contracts.length}
         />
 
         <DashboardCard
           title="Imóveis disponíveis"
           value={availableProperties}
+        />
+
+        <DashboardCard
+          title="Imóveis alugados"
+          value={rentedProperties}
+        />
+
+        <DashboardCard
+          title="Imóveis vendidos"
+          value={soldProperties}
         />
       </div>
 
