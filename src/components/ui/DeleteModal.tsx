@@ -6,7 +6,7 @@ type DeleteModalProps = {
   onClose: () => void;
   loading?: boolean;
 
-  // 🔥 NOVO (opcional)
+  
   confirmText?: string;
   cancelText?: string;
 };
