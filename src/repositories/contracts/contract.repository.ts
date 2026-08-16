@@ -1,25 +1,19 @@
 import {
   collection,
-  deleteDoc,
   doc,
-  getDoc,
   getDocs,
   onSnapshot,
   query,
   runTransaction,
   Unsubscribe,
-  updateDoc,
   where,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase";
 import { mapDoc } from "@/lib/map-doc";
+import { resolvePropertyStatus } from "@/utils/contract-rules";
 
-import {
-  Contract,
-  ContractStatus,
-  ContractType,
-} from "@/types/contract";
+import { Contract } from "@/types/contract";
 
 export type CreateContractDTO = Omit<Contract, "id" | "createdAt">;
 
@@ -37,6 +31,26 @@ export class ContractRepository {
     );
   }
 
+  private async hasActiveContractForProperty(
+    propertyId: string,
+    excludeContractId?: string
+  ) {
+    const activeContractQuery = query(
+      this.collectionRef,
+      where("ownerId", "==", this.ownerId),
+      where("propertyId", "==", propertyId),
+      where("status", "==", "active")
+    );
+
+    const snapshot = await getDocs(activeContractQuery);
+
+    if (!excludeContractId) {
+      return !snapshot.empty;
+    }
+
+    return snapshot.docs.some((document) => document.id !== excludeContractId);
+  }
+
   subscribe(callback: (contracts: Contract[]) => void): Unsubscribe {
     return onSnapshot(this.ownerQuery, (snapshot) => {
       callback(snapshot.docs.map((document) => mapDoc<Contract>(document)));
@@ -49,39 +63,21 @@ export class ContractRepository {
     return snapshot.docs.map((document) => mapDoc<Contract>(document));
   }
 
-  private resolvePropertyStatus(
-    contractType: ContractType,
-    contractStatus: ContractStatus
-  ): "Disponível" | "Alugado" | "Vendido" {
-    if (contractStatus === "active") {
-      return contractType === "sale" ? "Vendido" : "Alugado";
-    }
-
-    if (contractStatus === "finished") {
-      return contractType === "sale" ? "Vendido" : "Disponível";
-    }
-
-    return "Disponível";
-  }
-
   async createContract(data: CreateContractDTO) {
+    if (data.status === "active") {
+      const hasActive = await this.hasActiveContractForProperty(
+        data.propertyId
+      );
+
+      if (hasActive) {
+        throw new Error("Já existe um contrato ativo para este imóvel.");
+      }
+    }
+
     const contractRef = doc(this.collectionRef);
     const propertyRef = doc(db, "properties", data.propertyId);
 
     await runTransaction(db, async (transaction) => {
-      const activeContractQuery = query(
-        this.collectionRef,
-        where("ownerId", "==", this.ownerId),
-        where("propertyId", "==", data.propertyId),
-        where("status", "==", "active")
-      );
-
-      const existingContracts = await transaction.get(activeContractQuery);
-
-      if (!existingContracts.empty) {
-        throw new Error("Já existe um contrato ativo para este imóvel.");
-      }
-
       const propertySnapshot = await transaction.get(propertyRef);
 
       if (!propertySnapshot.exists()) {
@@ -95,7 +91,7 @@ export class ContractRepository {
       });
 
       transaction.update(propertyRef, {
-        status: this.resolvePropertyStatus(data.type, data.status),
+        status: resolvePropertyStatus(data.type, data.status),
       });
     });
 
@@ -104,6 +100,32 @@ export class ContractRepository {
 
   async updateContract(id: string, data: Partial<Contract>) {
     const contractRef = doc(db, "contracts", id);
+    const currentSnapshot = await getDocs(
+      query(this.collectionRef, where("ownerId", "==", this.ownerId))
+    );
+    const currentDoc = currentSnapshot.docs.find(
+      (document) => document.id === id
+    );
+
+    if (!currentDoc) {
+      throw new Error("Contrato não encontrado.");
+    }
+
+    const currentContract = currentDoc.data() as Contract;
+    const propertyId = data.propertyId ?? currentContract.propertyId;
+    const contractType = data.type ?? currentContract.type;
+    const contractStatus = data.status ?? currentContract.status;
+
+    if (contractStatus === "active") {
+      const hasActive = await this.hasActiveContractForProperty(
+        propertyId,
+        id
+      );
+
+      if (hasActive) {
+        throw new Error("Já existe um contrato ativo para este imóvel.");
+      }
+    }
 
     await runTransaction(db, async (transaction) => {
       const snapshot = await transaction.get(contractRef);
@@ -112,35 +134,12 @@ export class ContractRepository {
         throw new Error("Contrato não encontrado.");
       }
 
-      const currentContract = snapshot.data() as Contract;
-      const propertyId = data.propertyId ?? currentContract.propertyId;
-      const contractType = data.type ?? currentContract.type;
-      const contractStatus = data.status ?? currentContract.status;
       const propertyRef = doc(db, "properties", propertyId);
-
-      if (
-        data.propertyId &&
-        data.propertyId !== currentContract.propertyId &&
-        contractStatus === "active"
-      ) {
-        const activeContractQuery = query(
-          this.collectionRef,
-          where("ownerId", "==", this.ownerId),
-          where("propertyId", "==", data.propertyId),
-          where("status", "==", "active")
-        );
-
-        const existingContracts = await transaction.get(activeContractQuery);
-
-        if (!existingContracts.empty) {
-          throw new Error("Já existe um contrato ativo para este imóvel.");
-        }
-      }
 
       transaction.update(contractRef, data);
 
       transaction.update(propertyRef, {
-        status: this.resolvePropertyStatus(contractType, contractStatus),
+        status: resolvePropertyStatus(contractType, contractStatus),
       });
 
       if (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import {
 import { Property } from "@/types/property";
 
 import { UploadImageService } from "@/services/upload/upload-image.service";
+import { useOwnerId } from "@/hooks/useOwnerId";
 
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -51,65 +52,56 @@ const selectClassName = `
   focus:border-zinc-500
 `;
 
+function buildDefaultValues(
+  editingProperty?: Property | null
+): PropertyFormData {
+  if (!editingProperty) return defaultValues;
+
+  return {
+    title: editingProperty.title,
+    type: editingProperty.type,
+    purpose: editingProperty.purpose,
+    price: editingProperty.price,
+    city: editingProperty.city,
+    district: editingProperty.district,
+    status: editingProperty.status,
+    description: editingProperty.description,
+    imageUrl: editingProperty.imageUrl ?? "",
+  };
+}
+
 export function PropertyForm({
   onSubmit,
   onFinish,
   editingProperty,
 }: Props) {
+  const { ownerId } = useOwnerId();
   const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
-  const [selectedFile, setSelectedFile] =
-    useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const initialValues = buildDefaultValues(editingProperty);
+  const [imageUrl, setImageUrl] = useState(
+    editingProperty?.imageUrl ?? ""
+  );
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-  } = useForm<PropertyFormData>({
+  const { register, handleSubmit, reset } = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
-    defaultValues,
+    defaultValues: initialValues,
   });
 
-  useEffect(() => {
-    if (!editingProperty) {
-      reset(defaultValues);
-      setImageUrl("");
-      setSelectedFile(null);
-      return;
-    }
-
-    reset({
-      title: editingProperty.title,
-      type: editingProperty.type,
-      purpose: editingProperty.purpose,
-      price: editingProperty.price,
-      city: editingProperty.city,
-      district: editingProperty.district,
-      status: editingProperty.status,
-      description: editingProperty.description,
-      imageUrl: editingProperty.imageUrl ?? "",
-    });
-
-    setImageUrl(editingProperty.imageUrl ?? "");
-    setSelectedFile(null);
-  }, [editingProperty, reset]);
-
-  async function handleForm(
-    data: PropertyFormData
-  ) {
+  async function handleForm(data: PropertyFormData) {
     try {
       setLoading(true);
 
       let uploadedImageUrl = imageUrl;
 
       if (selectedFile) {
-        const uploadService =
-          new UploadImageService();
+        if (!ownerId) {
+          toast.error("Usuário não autenticado");
+          return;
+        }
 
-        uploadedImageUrl =
-          await uploadService.upload(
-            selectedFile
-          );
+        const uploadService = new UploadImageService(ownerId);
+        uploadedImageUrl = await uploadService.upload(selectedFile);
       }
 
       await onSubmit({
@@ -130,10 +122,7 @@ export function PropertyForm({
       onFinish?.();
     } catch (error) {
       console.error(error);
-
-      toast.error(
-        "Erro ao enviar imagem ou salvar imóvel"
-      );
+      toast.error("Erro ao enviar imagem ou salvar imóvel");
     } finally {
       setLoading(false);
     }
@@ -142,83 +131,41 @@ export function PropertyForm({
   return (
     <Card>
       <form
+        key={editingProperty?.id ?? "new-property"}
         onSubmit={handleSubmit(handleForm)}
         className="space-y-4"
       >
-        <Input
-          placeholder="Título"
-          {...register("title")}
-        />
+        <Input placeholder="Título" {...register("title")} />
 
-        <Input
-          placeholder="Tipo"
-          {...register("type")}
-        />
+        <Input placeholder="Tipo" {...register("type")} />
 
-        <select
-          {...register("purpose")}
-          className={selectClassName}
-        >
-          <option value="Venda">
-            Venda
-          </option>
-
-          <option value="Aluguel">
-            Aluguel
-          </option>
+        <select {...register("purpose")} className={selectClassName}>
+          <option value="Venda">Venda</option>
+          <option value="Aluguel">Aluguel</option>
         </select>
 
         <Input
           type="number"
           placeholder="Preço"
-          {...register("price", {
-            valueAsNumber: true,
-          })}
+          {...register("price", { valueAsNumber: true })}
         />
 
-        <Input
-          placeholder="Cidade"
-          {...register("city")}
-        />
+        <Input placeholder="Cidade" {...register("city")} />
 
-        <Input
-          placeholder="Bairro"
-          {...register("district")}
-        />
+        <Input placeholder="Bairro" {...register("district")} />
 
-        <select
-          {...register("status")}
-          className={selectClassName}
-        >
-          <option value="Disponível">
-            Disponível
-          </option>
-
-          <option value="Vendido">
-            Vendido
-          </option>
-
-          <option value="Alugado">
-            Alugado
-          </option>
+        <select {...register("status")} className={selectClassName}>
+          <option value="Disponível">Disponível</option>
+          <option value="Vendido">Vendido</option>
+          <option value="Alugado">Alugado</option>
         </select>
 
-        <Input
-          placeholder="Descrição"
-          {...register("description")}
-        />
+        <Input placeholder="Descrição" {...register("description")} />
 
-        <ImageUpload
-          onFileSelect={setSelectedFile}
-        />
+        <ImageUpload onFileSelect={setSelectedFile} />
 
-        <Button
-          type="submit"
-          loading={loading}
-        >
-          {editingProperty
-            ? "Atualizar imóvel"
-            : "Cadastrar imóvel"}
+        <Button type="submit" loading={loading}>
+          {editingProperty ? "Atualizar imóvel" : "Cadastrar imóvel"}
         </Button>
       </form>
     </Card>

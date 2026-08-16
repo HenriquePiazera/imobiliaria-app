@@ -1,117 +1,129 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
+import { FormEvent, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  getSettings,
-  saveSettings,
-} from "@/repositories/settings/settings.repository";
+import { useSaveSettings, useSettings } from "@/hooks/useSettings";
 
-export default function SettingsPage() {
-  const [loading, setLoading] =
-    useState(true);
+type SettingsFormProps = {
+  initialValues: {
+    companyName: string;
+    email: string;
+    phone: string;
+    address: string;
+    primaryColor: string;
+  };
+};
 
-  const [
-    companyName,
-    setCompanyName,
-  ] = useState("");
+function SettingsForm({ initialValues }: SettingsFormProps) {
+  const saveSettings = useSaveSettings();
+  const [form, setForm] = useState(initialValues);
 
-  const [email, setEmail] =
-    useState("");
+  async function handleSave(event: FormEvent) {
+    event.preventDefault();
 
-  const [phone, setPhone] =
-    useState("");
-
-  const [address, setAddress] =
-    useState("");
-
-  const [
-    primaryColor,
-    setPrimaryColor,
-  ] = useState("#18181b");
-
-  useEffect(() => {
-    async function loadSettings() {
-      try {
-        const settings =
-          await getSettings();
-
-        if (settings) {
-          setCompanyName(
-            settings.companyName
-          );
-
-          setEmail(
-            settings.email
-          );
-
-          setPhone(
-            settings.phone
-          );
-
-          setAddress(
-            settings.address
-          );
-
-          setPrimaryColor(
-            settings.primaryColor
-          );
-        }
-      } catch (error) {
-        console.error(error);
-
-        toast.error(
-          "Erro ao carregar configurações"
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadSettings();
-  }, []);
-
-  async function handleSave() {
     try {
-      await saveSettings({
-        companyName,
-        email,
-        phone,
-        address,
-        primaryColor,
-      });
-
-      toast.success(
-        "Configurações salvas"
-      );
+      await saveSettings.mutateAsync(form);
+      toast.success("Configurações salvas");
     } catch (error) {
       console.error(error);
-
-      toast.error(
-        "Erro ao salvar configurações"
-      );
+      toast.error("Erro ao salvar configurações");
     }
   }
 
-  if (loading) {
-    return (
-      <div
-        className="
-          flex
-          items-center
-          justify-center
-          h-[60vh]
-        "
+  return (
+    <form onSubmit={handleSave} className="space-y-6 rounded-2xl border bg-white p-6 shadow-sm">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Nome da imobiliária</label>
+          <input
+            type="text"
+            value={form.companyName}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, companyName: e.target.value }))
+            }
+            className="w-full rounded-xl border p-3"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">E-mail</label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, email: e.target.value }))
+            }
+            className="w-full rounded-xl border p-3"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Telefone</label>
+          <input
+            type="text"
+            value={form.phone}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, phone: e.target.value }))
+            }
+            className="w-full rounded-xl border p-3"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Endereço</label>
+          <input
+            type="text"
+            value={form.address}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, address: e.target.value }))
+            }
+            className="w-full rounded-xl border p-3"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Cor principal</label>
+          <input
+            type="color"
+            value={form.primaryColor}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, primaryColor: e.target.value }))
+            }
+            className="h-12 w-full rounded-xl border p-1"
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={saveSettings.isPending}
+        className="rounded-xl bg-zinc-900 px-6 py-3 text-white transition-colors hover:bg-zinc-800 disabled:opacity-60"
       >
-        <p>
-          Carregando
-          configurações...
-        </p>
+        {saveSettings.isPending ? "Salvando..." : "Salvar configurações"}
+      </button>
+    </form>
+  );
+}
+
+export default function SettingsPage() {
+  const { data: settings, isLoading } = useSettings();
+
+  const initialValues = useMemo(
+    () => ({
+      companyName: settings?.companyName ?? "",
+      email: settings?.email ?? "",
+      phone: settings?.phone ?? "",
+      address: settings?.address ?? "",
+      primaryColor: settings?.primaryColor ?? "#18181b",
+    }),
+    [settings]
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <p>Carregando configurações...</p>
       </div>
     );
   }
@@ -119,200 +131,16 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1
-          className="
-            text-3xl
-            font-bold
-          "
-        >
-          Configurações
-        </h1>
-
-        <p
-          className="
-            text-zinc-500
-          "
-        >
-          Gerencie as
-          informações da
-          imobiliária
+        <h1 className="text-3xl font-bold">Configurações</h1>
+        <p className="text-zinc-500">
+          Gerencie as informações da imobiliária
         </p>
       </div>
 
-      <div
-        className="
-          bg-white
-          border
-          rounded-2xl
-          p-6
-          shadow-sm
-          space-y-6
-        "
-      >
-        <div
-          className="
-            grid
-            grid-cols-1
-            md:grid-cols-2
-            gap-6
-          "
-        >
-          <div className="space-y-2">
-            <label
-              className="
-                text-sm
-                font-medium
-              "
-            >
-              Nome da
-              imobiliária
-            </label>
-
-            <input
-              type="text"
-              value={companyName}
-              onChange={(e) =>
-                setCompanyName(
-                  e.target.value
-                )
-              }
-              className="
-                w-full
-                border
-                rounded-xl
-                p-3
-              "
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className="
-                text-sm
-                font-medium
-              "
-            >
-              E-mail
-            </label>
-
-            <input
-              type="email"
-              value={email}
-              onChange={(e) =>
-                setEmail(
-                  e.target.value
-                )
-              }
-              className="
-                w-full
-                border
-                rounded-xl
-                p-3
-              "
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className="
-                text-sm
-                font-medium
-              "
-            >
-              Telefone
-            </label>
-
-            <input
-              type="text"
-              value={phone}
-              onChange={(e) =>
-                setPhone(
-                  e.target.value
-                )
-              }
-              className="
-                w-full
-                border
-                rounded-xl
-                p-3
-              "
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className="
-                text-sm
-                font-medium
-              "
-            >
-              Endereço
-            </label>
-
-            <input
-              type="text"
-              value={address}
-              onChange={(e) =>
-                setAddress(
-                  e.target.value
-                )
-              }
-              className="
-                w-full
-                border
-                rounded-xl
-                p-3
-              "
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className="
-                text-sm
-                font-medium
-              "
-            >
-              Cor principal
-            </label>
-
-            <input
-              type="color"
-              value={primaryColor}
-              onChange={(e) =>
-                setPrimaryColor(
-                  e.target.value
-                )
-              }
-              className="
-                w-full
-                h-12
-                border
-                rounded-xl
-                p-1
-              "
-            />
-          </div>
-        </div>
-
-        <div>
-          <button
-            onClick={handleSave}
-            className="
-              bg-zinc-900
-              hover:bg-zinc-800
-              transition-colors
-              text-white
-              px-6
-              py-3
-              rounded-xl
-            "
-          >
-            Salvar
-            configurações
-          </button>
-        </div>
-      </div>
+      <SettingsForm
+        key={JSON.stringify(initialValues)}
+        initialValues={initialValues}
+      />
     </div>
   );
 }

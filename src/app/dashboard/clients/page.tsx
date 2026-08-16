@@ -1,113 +1,72 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { ClientForm } from "@/components/clients/ClientForm";
 import { ClientList } from "@/components/clients/ClientList";
-
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
+import { Pagination } from "@/components/ui/Pagination";
 
-import { ClientRepository } from "@/repositories/clients/client.repository";
+import {
+  useClients,
+  useCreateClient,
+  useDeleteClient,
+  useUpdateClient,
+} from "@/hooks/useClients";
 
 import { Client } from "@/types/client";
+import { exportToCsv } from "@/utils/exportCsv";
+import { getTotalPages, paginate } from "@/utils/paginate";
 
-const clientRepository =
-  new ClientRepository();
+const PAGE_SIZE = 6;
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] =
-    useState(false);
+  const { data: clients = [], isLoading } = useClients();
+  const createClient = useCreateClient();
+  const updateClient = useUpdateClient();
+  const deleteClient = useDeleteClient();
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "lead" | "client" | "inactive"
+  >("all");
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 
-  const [statusFilter, setStatusFilter] =
-    useState<
-      | "all"
-      | "lead"
-      | "client"
-      | "inactive"
-    >("all");
+  const filteredClients = useMemo(() => {
+    return clients.filter((client) => {
+      const matchesSearch =
+        client.name.toLowerCase().includes(search.toLowerCase()) ||
+        client.email.toLowerCase().includes(search.toLowerCase());
 
-  const [editingClient, setEditingClient] =
-    useState<Client | null>(null);
+      const matchesStatus =
+        statusFilter === "all" ? true : client.status === statusFilter;
 
-  const [
-    clientToDelete,
-    setClientToDelete,
-  ] = useState<Client | null>(null);
+      return matchesSearch && matchesStatus;
+    });
+  }, [clients, search, statusFilter]);
 
-  useEffect(() => {
-    loadClients();
-  }, []);
+  const totalPages = getTotalPages(filteredClients.length, PAGE_SIZE);
+  const paginatedClients = paginate(filteredClients, page, PAGE_SIZE);
 
-  async function loadClients() {
+  async function handleSubmit(data: Omit<Client, "id" | "createdAt" | "ownerId">) {
     try {
-      setLoading(true);
-
-      const data =
-        await clientRepository.getClients();
-
-      setClients(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSubmit(
-    data: Omit<Client, "id" | "createdAt">
-  ) {
-    try {
-      setLoading(true);
-
       if (editingClient) {
-        await clientRepository.updateClient(
-          editingClient.id,
-          data
-        );
-
-        setClients((prev) =>
-          prev.map((client) =>
-            client.id ===
-            editingClient.id
-              ? {
-                  ...client,
-                  ...data,
-                }
-              : client
-          )
-        );
-
+        await updateClient.mutateAsync({ id: editingClient.id, data });
+        toast.success("Cliente atualizado");
         setEditingClient(null);
-
         return;
       }
 
-      const createdAt =
-        new Date().toISOString();
-
-      const createdClient =
-        await clientRepository.createClient({
-          ...data,
-          createdAt,
-        });
-
-      setClients((prev) => [
-        {
-          id: createdClient.id,
-          ...data,
-          createdAt,
-        },
-        ...prev,
-      ]);
+      await createClient.mutateAsync(data);
+      toast.success("Cliente cadastrado");
     } catch (error) {
       console.error(error);
-    } finally {
-      setLoading(false);
+      toast.error("Erro ao salvar cliente");
     }
   }
 
@@ -115,96 +74,63 @@ export default function ClientsPage() {
     if (!clientToDelete) return;
 
     try {
-      await clientRepository.deleteClient(
-        clientToDelete.id
-      );
-
-      setClients((prev) =>
-        prev.filter(
-          (client) =>
-            client.id !==
-            clientToDelete.id
-        )
-      );
-
+      await deleteClient.mutateAsync(clientToDelete.id);
+      toast.success("Cliente excluído");
       setClientToDelete(null);
     } catch (error) {
       console.error(error);
+      toast.error("Erro ao excluir cliente");
     }
   }
 
-  const filteredClients = useMemo(() => {
-    return clients.filter((client) => {
-      const matchesSearch =
-        client.name
-          .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          ) ||
-        client.email
-          .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          );
+  function handleExport() {
+    exportToCsv("clientes.csv", filteredClients, [
+      { key: "name", label: "Nome" },
+      { key: "email", label: "E-mail" },
+      { key: "phone", label: "Telefone" },
+      { key: "status", label: "Status" },
+      { key: "city", label: "Cidade" },
+    ]);
+    toast.success("Exportação iniciada");
+  }
 
-      const matchesStatus =
-        statusFilter === "all"
-          ? true
-          : client.status ===
-            statusFilter;
-
-      return (
-        matchesSearch &&
-        matchesStatus
-      );
-    });
-  }, [
-    clients,
-    search,
-    statusFilter,
-  ]);
+  const loading =
+    isLoading ||
+    createClient.isPending ||
+    updateClient.isPending ||
+    deleteClient.isPending;
 
   return (
     <>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-900">
-            Clientes
-          </h1>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-zinc-900">Clientes</h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Gerencie seus clientes, leads e contatos.
+            </p>
+          </div>
 
-          <p className="mt-1 text-sm text-zinc-500">
-            Gerencie seus clientes,
-            leads e contatos.
-          </p>
+          <Button type="button" onClick={handleExport}>
+            Exportar CSV
+          </Button>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold">
-              {editingClient
-                ? "Editar cliente"
-                : "Novo cliente"}
+              {editingClient ? "Editar cliente" : "Novo cliente"}
             </h2>
 
             <ClientForm
-              initialData={
-                editingClient ||
-                undefined
-              }
+              initialData={editingClient || undefined}
               onSubmit={handleSubmit}
               loading={loading}
             />
 
             {editingClient && (
               <div className="mt-4">
-                <Button
-                  type="button"
-                  onClick={() =>
-                    setEditingClient(
-                      null
-                    )
-                  }
-                >
+                <Button type="button" onClick={() => setEditingClient(null)}>
                   Cancelar edição
                 </Button>
               </div>
@@ -217,133 +143,78 @@ export default function ClientsPage() {
                 <Input
                   placeholder="Buscar cliente..."
                   value={search}
-                  onChange={(e) =>
-                    setSearch(
-                      e.target.value
-                    )
-                  }
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
                 />
 
                 <select
                   value={statusFilter}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setStatusFilter(
-                      e.target.value as
-                        | "all"
-                        | "lead"
-                        | "client"
-                        | "inactive"
-                    )
-                  }
-                  className="
-                    rounded-xl
-                    border border-zinc-300
-                    bg-white
-                    px-4 py-3
-                    text-sm
-                    outline-none
-                  "
+                      e.target.value as "all" | "lead" | "client" | "inactive"
+                    );
+                    setPage(1);
+                  }}
+                  className="rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm outline-none"
                 >
-                  <option value="all">
-                    Todos
-                  </option>
-
-                  <option value="lead">
-                    Leads
-                  </option>
-
-                  <option value="client">
-                    Clientes
-                  </option>
-
-                  <option value="inactive">
-                    Inativos
-                  </option>
+                  <option value="all">Todos</option>
+                  <option value="lead">Leads</option>
+                  <option value="client">Clientes</option>
+                  <option value="inactive">Inativos</option>
                 </select>
               </div>
             </div>
 
             <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">
-                  Clientes cadastrados
-                </h2>
-
+                <h2 className="text-lg font-semibold">Clientes cadastrados</h2>
                 <span className="text-sm text-zinc-500">
-                  {
-                    filteredClients.length
-                  }{" "}
-                  registros
+                  {filteredClients.length} registros
                 </span>
               </div>
 
-              <ClientList
-                clients={
-                  filteredClients
-                }
-                onEdit={
-                  setEditingClient
-                }
-                onDelete={
-                  setClientToDelete
-                }
-              />
+              {paginatedClients.length === 0 ? (
+                <EmptyState message="Nenhum cliente encontrado. Cadastre o primeiro ou use os dados demo no dashboard." />
+              ) : (
+                <>
+                  <ClientList
+                    clients={paginatedClients}
+                    onEdit={setEditingClient}
+                    onDelete={setClientToDelete}
+                  />
+
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {clientToDelete && (
-        <div
-          className="
-            fixed inset-0 z-50
-            flex items-center justify-center
-            bg-black/50
-            p-4
-          "
-        >
-          <div
-            className="
-              w-full max-w-md
-              rounded-2xl
-              bg-white
-              p-6
-              shadow-xl
-            "
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-xl font-semibold text-zinc-900">
               Confirmar exclusão
             </h2>
 
             <p className="mt-3 text-sm text-zinc-600">
-              Deseja realmente excluir o
-              cliente{" "}
-              <strong>
-                {
-                  clientToDelete.name
-                }
-              </strong>
-              ?
+              Deseja realmente excluir o cliente{" "}
+              <strong>{clientToDelete.name}</strong>?
             </p>
 
             <div className="mt-6 flex justify-end gap-3">
-              <Button
-                type="button"
-                onClick={() =>
-                  setClientToDelete(
-                    null
-                  )
-                }
-              >
+              <Button type="button" onClick={() => setClientToDelete(null)}>
                 Cancelar
               </Button>
 
-              <Button
-                type="button"
-                onClick={
-                  confirmDeleteClient
-                }
-              >
+              <Button type="button" onClick={confirmDeleteClient}>
                 Excluir
               </Button>
             </div>

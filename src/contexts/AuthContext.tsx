@@ -24,6 +24,13 @@ type AuthUser = {
   email: string | null;
 };
 
+function mapUser(user: User): AuthUser {
+  return {
+    uid: user.uid,
+    email: user.email,
+  };
+}
+
 type AuthContextType = {
   user: AuthUser | null;
   loading: boolean;
@@ -71,13 +78,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOut(auth);
     setUser(null);
     clearAuthCookie();
-  }
-
-  function mapUser(user: User): AuthUser {
-    return {
-      uid: user.uid,
-      email: user.email,
-    };
   }
 
   return (

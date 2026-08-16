@@ -3,6 +3,7 @@
 import { Contract } from "@/types/contract";
 import { Client } from "@/types/client";
 import { Property } from "@/types/property";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 interface RecentContractsProps {
   contracts: Contract[];
@@ -236,16 +237,8 @@ export function RecentContracts({
                     )}
                   </span>
 
-                  <p
-                    className="
-                      text-lg
-                      font-bold
-                    "
-                  >
-                    R${" "}
-                    {contract.value.toLocaleString(
-                      "pt-BR"
-                    )}
+                  <p className="text-lg font-bold">
+                    {formatCurrency(contract.value)}
                   </p>
                 </div>
               </div>

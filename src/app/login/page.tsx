@@ -58,10 +58,13 @@ export default function LoginPage() {
       );
 
       router.push("/dashboard");
-    } catch (error: any) {
-      toast.error(
-        getAuthErrorMessage(error.code)
-      );
+    } catch (error: unknown) {
+      const code =
+        error instanceof Object && "code" in error
+          ? String(error.code)
+          : undefined;
+
+      toast.error(getAuthErrorMessage(code ?? ""));
     } finally {
       setLoading(false);
     }
