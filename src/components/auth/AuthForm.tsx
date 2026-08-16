@@ -190,8 +190,12 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps) {
       </div>
 
       <p className="mt-6 text-center text-xs text-zinc-500">
+        <Link href="/" className="hover:underline">
+          Voltar ao início
+        </Link>
+        {" · "}
         <Link href="/case-study" className="hover:underline">
-          Conheça o projeto
+          Case study
         </Link>
       </p>
     </div>

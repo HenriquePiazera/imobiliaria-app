@@ -1,6 +1,6 @@
 import { execFileSync } from "child_process";
 import ffmpegPath from "ffmpeg-static";
-import { mkdirSync, writeFileSync } from "fs";
+import { copyFileSync, mkdirSync, writeFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, "..");
 const screenshotsDir = path.join(rootDir, "docs", "screenshots");
 const outputDir = path.join(rootDir, "docs", "demo-video");
+const publicVideoDir = path.join(rootDir, "public", "demo-video");
 
 const slides = [
   {
@@ -142,6 +143,13 @@ function main() {
 
   console.log(`\nVídeo pronto: ${finalVideoPath}`);
   console.log(`Legendas: ${srtPath}`);
+
+  mkdirSync(publicVideoDir, { recursive: true });
+  copyFileSync(
+    finalVideoPath,
+    path.join(publicVideoDir, "imobiliaria-app-demo.mp4")
+  );
+  console.log(`Cópia pública: ${path.join(publicVideoDir, "imobiliaria-app-demo.mp4")}`);
 }
 
 main();
