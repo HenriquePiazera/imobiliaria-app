@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
+import { DashboardInsights } from "@/components/dashboard/DashboardInsights";
+import { ExpiringContracts } from "@/components/dashboard/ExpiringContracts";
 import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
 import { RecentContracts } from "@/components/dashboard/RecentContracts";
 import { SeedDemoButton } from "@/components/dashboard/SeedDemoButton";
@@ -10,6 +12,7 @@ import { SeedDemoButton } from "@/components/dashboard/SeedDemoButton";
 import { useClients } from "@/hooks/useClients";
 import { useContracts } from "@/hooks/useContracts";
 import { useProperties } from "@/hooks/useProperties";
+import { getExpiringContracts } from "@/utils/contract-dates";
 
 export default function DashboardPage() {
   const { data: clients = [], isLoading: clientsLoading } = useClients();
@@ -48,6 +51,11 @@ export default function DashboardPage() {
     () =>
       properties.filter((property) => property.status === "Vendido").length,
     [properties]
+  );
+
+  const expiringContracts = useMemo(
+    () => getExpiringContracts(contracts),
+    [contracts]
   );
 
   if (loading) {
@@ -91,6 +99,14 @@ export default function DashboardPage() {
         <DashboardCard title="Imóveis alugados" value={rentedProperties} />
         <DashboardCard title="Imóveis vendidos" value={soldProperties} />
       </div>
+
+      <DashboardInsights
+        clients={clients}
+        properties={properties}
+        contracts={contracts}
+      />
+
+      <ExpiringContracts contracts={expiringContracts} />
 
       <RecentContracts
         contracts={contracts}

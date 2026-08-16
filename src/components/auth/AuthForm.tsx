@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/Button";
@@ -10,9 +10,10 @@ import {
   getAuthErrorMessage,
   loginUser,
   registerUser,
+  resetPassword,
 } from "@/services/auth.service";
 
-type AuthMode = "login" | "register";
+type AuthMode = "login" | "register" | "forgot";
 
 type AuthFormProps = {
   initialMode?: AuthMode;
@@ -30,6 +31,13 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps) {
 
     try {
       setLoading(true);
+
+      if (mode === "forgot") {
+        await resetPassword(email);
+        toast.success("Link de recuperação enviado para seu e-mail.");
+        setMode("login");
+        return;
+      }
 
       if (mode === "login") {
         await loginUser(email, password);
@@ -52,76 +60,140 @@ export function AuthForm({ initialMode = "login" }: AuthFormProps) {
     }
   }
 
+  const titles = {
+    login: "Fazer login",
+    register: "Criar conta",
+    forgot: "Recuperar senha",
+  } as const;
+
+  const subtitles = {
+    login: "Use sua conta Imobiliária App",
+    register: "Preencha os dados para começar",
+    forgot: "Informe seu e-mail para receber o link de redefinição",
+  } as const;
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full max-w-md space-y-5 rounded-2xl bg-white p-8 shadow-sm"
-    >
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold">
-          {mode === "login" ? "Entrar" : "Criar conta"}
-        </h1>
-        <p className="text-sm text-zinc-500">
-          {mode === "login"
-            ? "Acesse seu CRM imobiliário"
-            : "Cadastre-se e comece a usar o sistema"}
-        </p>
+    <div className="w-full max-w-[448px]">
+      <div className="rounded-3xl border border-zinc-200 bg-white px-8 py-10 shadow-sm">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-xl">
+            🏠
+          </div>
+          <h1 className="text-2xl font-normal text-zinc-900">
+            {titles[mode]}
+          </h1>
+          <p className="mt-2 text-sm text-zinc-500">{subtitles[mode]}</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="email"
+              className="mb-1 block text-sm font-medium text-zinc-700"
+            >
+              E-mail
+            </label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full rounded-lg border border-zinc-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+
+          {mode !== "forgot" && (
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-1 block text-sm font-medium text-zinc-700"
+              >
+                Senha
+              </label>
+              <input
+                id="password"
+                type="password"
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full rounded-lg border border-zinc-300 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+          )}
+
+          {mode === "login" && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setMode("forgot")}
+                className="text-sm font-medium text-blue-600 hover:underline"
+              >
+                Esqueceu a senha?
+              </button>
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            loading={loading}
+            className="w-full rounded-full bg-blue-600 py-3 hover:bg-blue-700"
+          >
+            {mode === "login" && "Entrar"}
+            {mode === "register" && "Criar conta"}
+            {mode === "forgot" && "Enviar link de recuperação"}
+          </Button>
+        </form>
+
+        <div className="mt-6 space-y-3 border-t border-zinc-100 pt-6 text-center text-sm">
+          {mode === "login" && (
+            <>
+              <p className="text-zinc-600">Não tem uma conta?</p>
+              <button
+                type="button"
+                onClick={() => setMode("register")}
+                className="font-medium text-blue-600 hover:underline"
+              >
+                Criar conta
+              </button>
+            </>
+          )}
+
+          {mode === "register" && (
+            <>
+              <p className="text-zinc-600">Já possui uma conta?</p>
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className="font-medium text-blue-600 hover:underline"
+              >
+                Fazer login
+              </button>
+            </>
+          )}
+
+          {mode === "forgot" && (
+            <button
+              type="button"
+              onClick={() => setMode("login")}
+              className="font-medium text-blue-600 hover:underline"
+            >
+              Voltar ao login
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 rounded-xl bg-zinc-100 p-1">
-        <button
-          type="button"
-          onClick={() => setMode("login")}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            mode === "login"
-              ? "bg-white text-zinc-900 shadow-sm"
-              : "text-zinc-500 hover:text-zinc-900"
-          }`}
-        >
-          Entrar
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setMode("register")}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            mode === "register"
-              ? "bg-white text-zinc-900 shadow-sm"
-              : "text-zinc-500 hover:text-zinc-900"
-          }`}
-        >
-          Criar conta
-        </button>
-      </div>
-
-      <input
-        type="email"
-        placeholder="E-mail"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        className="w-full rounded-xl border px-4 py-2 outline-none focus:border-zinc-900"
-      />
-
-      <input
-        type="password"
-        placeholder="Senha (mínimo 6 caracteres)"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        minLength={6}
-        className="w-full rounded-xl border px-4 py-2 outline-none focus:border-zinc-900"
-      />
-
-      <Button type="submit" loading={loading} className="w-full">
-        {mode === "login" ? "Entrar" : "Criar conta"}
-      </Button>
-
-      <div className="text-center text-sm text-zinc-600">
-        <Link href="/" className="font-medium text-zinc-900 hover:underline">
-          ← Voltar ao início
+      <p className="mt-6 text-center text-xs text-zinc-500">
+        <Link href="/case-study" className="hover:underline">
+          Conheça o projeto
         </Link>
-      </div>
-    </form>
+      </p>
+    </div>
   );
 }

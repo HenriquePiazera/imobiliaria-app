@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
@@ -33,6 +34,10 @@ export async function loginUser(
   return result;
 }
 
+export async function resetPassword(email: string) {
+  return sendPasswordResetEmail(auth, email);
+}
+
 export async function logoutUser() {
   clearAuthCookie();
   return await signOut(auth);
@@ -59,6 +64,9 @@ export function getAuthErrorMessage(
 
     case "auth/invalid-credential":
       return "E-mail ou senha inválidos.";
+
+    case "auth/too-many-requests":
+      return "Muitas tentativas. Tente novamente mais tarde.";
 
     default:
       return "Ocorreu um erro inesperado.";

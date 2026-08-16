@@ -2,11 +2,9 @@
 
 import { ReactNode } from "react";
 
-import { ProtectedRoute }
-from "@/components/auth/ProtectedRoute";
-
-import { DashboardShell }
-from "@/components/layout/DashboardShell";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { DashboardShell } from "@/components/layout/DashboardShell";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 type DashboardLayoutProps = {
   children: ReactNode;
@@ -17,9 +15,9 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   return (
     <ProtectedRoute>
-      <DashboardShell>
-        {children}
-      </DashboardShell>
+      <ThemeProvider>
+        <DashboardShell>{children}</DashboardShell>
+      </ThemeProvider>
     </ProtectedRoute>
   );
 }

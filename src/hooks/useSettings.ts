@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { SettingsRepository } from "@/repositories/settings/settings.repository";
 import { Settings } from "@/types/settings";
@@ -19,11 +19,15 @@ export function useSettings() {
 
 export function useSaveSettings() {
   const { ownerId } = useOwnerId();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (settings: Omit<Settings, "ownerId">) => {
       if (!ownerId) throw new Error("Usuário não autenticado");
       return new SettingsRepository(ownerId).saveSettings(settings);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["settings", ownerId] });
     },
   });
 }

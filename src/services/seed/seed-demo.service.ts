@@ -191,7 +191,7 @@ export class SeedDemoService {
         value: 8500,
         status: "active",
         startDate: "2026-01-15",
-        endDate: "2027-01-15",
+        endDate: "2026-09-12",
       }),
       contractRepo.createContract({
         ownerId: this.ownerId,
@@ -203,7 +203,7 @@ export class SeedDemoService {
         value: 2800,
         status: "active",
         startDate: "2026-02-01",
-        endDate: "2027-02-01",
+        endDate: "2026-09-05",
       }),
       contractRepo.createContract({
         ownerId: this.ownerId,
@@ -246,7 +246,18 @@ export class SeedDemoService {
       email: "contato@horizonimoveis.com.br",
       phone: "(11) 3456-7890",
       address: "Av. Brigadeiro Faria Lima, 2500 — São Paulo, SP",
-      primaryColor: "#18181b",
+      tagline: "Imóveis de alto padrão em São Paulo",
+      website: "https://horizonimoveis.com.br",
+      creci: "J-12345",
+      logoUrl: "",
+      themeMode: "light",
+      themePreset: "ocean",
+      primaryColor: "#1d4ed8",
+      accentColor: "#0ea5e9",
+      sidebarColor: "#1e3a8a",
+      sidebarTextColor: "#eff6ff",
+      dashboardBackground: "#eff6ff",
+      cardBackground: "#ffffff",
     });
   }
 }

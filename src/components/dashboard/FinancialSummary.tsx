@@ -21,7 +21,7 @@ export function FinancialSummary({ contracts }: FinancialSummaryProps) {
   const totalRevenue = rentRevenue + saleRevenue;
 
   return (
-    <div className="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+    <div className="theme-card space-y-6 rounded-2xl border border-zinc-200 p-6 shadow-sm">
       <div>
         <h2 className="text-xl font-semibold">Resumo financeiro</h2>
         <p className="text-sm text-zinc-500">

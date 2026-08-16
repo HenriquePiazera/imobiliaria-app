@@ -10,13 +10,7 @@ interface DashboardCardProps {
   }: DashboardCardProps) {
     return (
       <div
-        className="
-          bg-white
-          border
-          rounded-2xl
-          p-6
-          shadow-sm
-        "
+        className="theme-card rounded-2xl border p-6 shadow-sm"
       >
         <p
           className="

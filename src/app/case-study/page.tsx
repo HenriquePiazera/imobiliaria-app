@@ -28,7 +28,7 @@ export default function CaseStudyPage() {
 
           <div>
             <Link
-              href="/register"
+              href="/login?mode=register"
               className="inline-block rounded-xl bg-zinc-900 px-5 py-3 text-sm text-white"
             >
               Criar conta e testar
