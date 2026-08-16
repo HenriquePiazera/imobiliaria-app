@@ -5,30 +5,36 @@ import {
 } from "firebase/auth";
 
 import { auth } from "@/lib/firebase";
+import { clearAuthCookie, setAuthCookie } from "@/lib/auth-cookie";
 
 export async function registerUser(
   email: string,
   password: string
 ) {
-  return await createUserWithEmailAndPassword(
+  const result = await createUserWithEmailAndPassword(
     auth,
     email,
     password
   );
+  setAuthCookie(true);
+  return result;
 }
 
 export async function loginUser(
   email: string,
   password: string
 ) {
-  return await signInWithEmailAndPassword(
+  const result = await signInWithEmailAndPassword(
     auth,
     email,
     password
   );
+  setAuthCookie(true);
+  return result;
 }
 
 export async function logoutUser() {
+  clearAuthCookie();
   return await signOut(auth);
 }
 

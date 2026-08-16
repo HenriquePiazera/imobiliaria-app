@@ -17,6 +17,7 @@ import {
 } from "firebase/auth";
 
 import { auth } from "@/lib/firebase";
+import { clearAuthCookie, setAuthCookie } from "@/lib/auth-cookie";
 
 type AuthUser = {
   uid: string;
@@ -41,8 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         setUser(mapUser(firebaseUser));
+        setAuthCookie(true);
       } else {
         setUser(null);
+        clearAuthCookie();
       }
       setLoading(false);
     });
@@ -67,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function logout() {
     await signOut(auth);
     setUser(null);
+    clearAuthCookie();
   }
 
   function mapUser(user: User): AuthUser {

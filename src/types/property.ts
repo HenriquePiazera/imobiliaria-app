@@ -1,5 +1,6 @@
 export type Property = {
   id: string;
+  ownerId: string;
   title: string;
   type: string;
   purpose: "Venda" | "Aluguel";

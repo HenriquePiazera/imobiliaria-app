@@ -4,6 +4,7 @@ export type ContractStatus = "active" | "finished" | "canceled";
 
 export interface Contract {
   id: string;
+  ownerId: string;
 
   clientId: string;
   propertyId: string;

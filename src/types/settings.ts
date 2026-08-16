@@ -1,7 +1,6 @@
 export interface Settings {
-    id?: string;
-  
-    companyName: string;
+  ownerId: string;
+  companyName: string;
   
     email: string;
   

@@ -5,6 +5,7 @@ export type ClientStatus =
 
 export interface Client {
   id: string;
+  ownerId: string;
 
   name: string;
   email: string;
