@@ -5,7 +5,7 @@ import { SettingsRepository } from "@/repositories/settings/settings.repository"
 
 const PROPERTY_IMAGES = {
   apartment:
-    "https://images.unsplash.com/photo-1502672260266-1c1ef2cd9368?w=800&q=80",
+    "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=800&q=80",
   house:
     "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80",
   penthouse:

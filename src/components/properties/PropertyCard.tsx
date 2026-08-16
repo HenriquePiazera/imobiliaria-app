@@ -1,4 +1,11 @@
+"use client";
+
+import { useState } from "react";
+
 import { Property } from "@/types/property";
+
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=800&q=80";
 
 type Props = {
   property: Property;
@@ -11,14 +18,19 @@ export function PropertyCard({
   onEdit,
   onDelete,
 }: Props) {
+  const [imageSrc, setImageSrc] = useState(
+    property.imageUrl || FALLBACK_IMAGE
+  );
+
   return (
     <div className="w-full overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
       <div className="relative flex h-52 items-center justify-center bg-zinc-200">
-        {property.imageUrl ? (
+        {imageSrc ? (
           <img
-            src={property.imageUrl}
+            src={imageSrc}
             alt={property.title}
             className="h-full w-full object-cover"
+            onError={() => setImageSrc(FALLBACK_IMAGE)}
           />
         ) : (
           <span>Sem imagem</span>
@@ -30,9 +42,7 @@ export function PropertyCard({
       </div>
 
       <div className="space-y-2 p-4">
-        <h2 className="text-lg font-semibold">
-          {property.title}
-        </h2>
+        <h2 className="text-lg font-semibold">{property.title}</h2>
 
         <p className="text-sm text-zinc-500">
           {property.district}, {property.city}
@@ -42,9 +52,7 @@ export function PropertyCard({
           R$ {property.price.toLocaleString("pt-BR")}
         </p>
 
-        <p className="line-clamp-3 text-sm">
-          {property.description}
-        </p>
+        <p className="line-clamp-3 text-sm">{property.description}</p>
 
         <div className="flex gap-2 pt-3">
           <button

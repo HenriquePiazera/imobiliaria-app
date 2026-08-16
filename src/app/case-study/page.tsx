@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function CaseStudyPage() {
   return (
     <main className="min-h-screen bg-zinc-50">
-      <div className="mx-auto max-w-4xl px-6 py-16 space-y-12">
+      <div className="mx-auto max-w-4xl space-y-12 px-6 py-16">
         <header className="space-y-4">
           <Link
             href="/"
@@ -26,20 +26,17 @@ export default function CaseStudyPage() {
             isolamento multi-usuário.
           </p>
 
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="https://imobiliaria-app-mu.vercel.app/"
-              className="rounded-xl bg-zinc-900 px-5 py-3 text-sm text-white"
-              target="_blank"
-            >
-              Ver demo ao vivo
-            </Link>
+          <div>
             <Link
               href="/register"
-              className="rounded-xl border px-5 py-3 text-sm"
+              className="inline-block rounded-xl bg-zinc-900 px-5 py-3 text-sm text-white"
             >
-              Criar conta
+              Criar conta e testar
             </Link>
+            <p className="mt-2 text-sm text-zinc-500">
+              Cadastro gratuito — em segundos você entra no dashboard e pode
+              popular dados de demonstração.
+            </p>
           </div>
         </header>
 
@@ -66,54 +63,50 @@ export default function CaseStudyPage() {
         </section>
 
         <section className="space-y-4 rounded-2xl border bg-white p-8 shadow-sm">
-          <h2 className="text-2xl font-semibold">Decisões técnicas</h2>
+          <h2 className="text-2xl font-semibold">Destaques técnicos</h2>
 
-          <div className="space-y-6 text-zinc-600">
-            <div>
+          <ul className="space-y-4 text-zinc-600">
+            <li className="rounded-xl border p-4">
               <h3 className="font-semibold text-zinc-900">
-                Next.js + Firebase em vez de API própria
+                Next.js + Firebase
               </h3>
-              <p>
-                Reduz complexidade de infraestrutura para um MVP profissional.
-                Auth, banco, storage e deploy ficam prontos. Trade-off: regras
-                de segurança ficam no Firestore Rules, não em controllers
-                Node.js.
+              <p className="mt-1">
+                Stack moderna com autenticação, banco, storage e deploy prontos
+                para produção — ideal para entregar valor rápido com qualidade
+                profissional.
               </p>
-            </div>
+            </li>
 
-            <div>
+            <li className="rounded-xl border p-4">
               <h3 className="font-semibold text-zinc-900">
                 Repository Pattern + React Query
               </h3>
-              <p>
-                Repositories encapsulam Firestore; hooks com React Query
-                centralizam cache, mutations e listeners em tempo real.
-                Trade-off: mais camadas, porém código previsível e testável.
+              <p className="mt-1">
+                Código organizado em camadas, com cache inteligente e
+                atualização em tempo real nas telas principais.
               </p>
-            </div>
+            </li>
 
-            <div>
+            <li className="rounded-xl border p-4">
               <h3 className="font-semibold text-zinc-900">
-                Transações Firestore nos contratos
+                Transações nos contratos
               </h3>
-              <p>
-                Criar/editar/excluir contrato atualiza o imóvel na mesma
-                transação, evitando inconsistência parcial. Trade-off: queries
-                compostas exigem índices no Firestore.
+              <p className="mt-1">
+                Ao criar, editar ou excluir um contrato, o status do imóvel
+                é atualizado de forma consistente e automática.
               </p>
-            </div>
+            </li>
 
-            <div>
+            <li className="rounded-xl border p-4">
               <h3 className="font-semibold text-zinc-900">
-                Multi-tenant por ownerId
+                Multi-usuário com isolamento de dados
               </h3>
-              <p>
-                Cada documento pertence a um usuário autenticado. Security
-                Rules garantem isolamento no backend. Trade-off: dados legados
-                sem ownerId precisam migração.
+              <p className="mt-1">
+                Cada conta vê apenas seus próprios clientes, imóveis e
+                contratos, com regras de segurança no Firestore.
               </p>
-            </div>
-          </div>
+            </li>
+          </ul>
         </section>
 
         <section className="space-y-4 rounded-2xl border bg-white p-8 shadow-sm">
@@ -126,12 +119,20 @@ export default function CaseStudyPage() {
         </section>
 
         <section className="space-y-4 rounded-2xl border bg-white p-8 shadow-sm">
-          <h2 className="text-2xl font-semibold">Resultados mensuráveis</h2>
-          <ul className="grid gap-4 sm:grid-cols-2 text-zinc-600">
-            <li className="rounded-xl border p-4">3 entidades de domínio integradas</li>
-            <li className="rounded-xl border p-4">5+ regras de negócio automatizadas</li>
-            <li className="rounded-xl border p-4">Deploy contínuo na Vercel</li>
-            <li className="rounded-xl border p-4">Testes unitários nas regras críticas</li>
+          <h2 className="text-2xl font-semibold">Resultados</h2>
+          <ul className="grid gap-4 text-zinc-600 sm:grid-cols-2">
+            <li className="rounded-xl border p-4">
+              3 entidades de domínio integradas
+            </li>
+            <li className="rounded-xl border p-4">
+              5+ regras de negócio automatizadas
+            </li>
+            <li className="rounded-xl border p-4">
+              Deploy contínuo na Vercel
+            </li>
+            <li className="rounded-xl border p-4">
+              Testes unitários nas regras críticas
+            </li>
           </ul>
         </section>
       </div>

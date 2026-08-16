@@ -1,0 +1,27 @@
+﻿1
+00:00:00,000 --> 00:00:04,000
+Imobiliária App — CRM completo para imobiliárias
+
+2
+00:00:04,000 --> 00:00:07,000
+Acesso seguro com autenticação por e-mail e senha
+
+3
+00:00:07,000 --> 00:00:12,000
+Dashboard em tempo real com métricas da operação
+
+4
+00:00:12,000 --> 00:00:17,000
+Gestão de clientes, leads e contatos com busca e filtros
+
+5
+00:00:17,000 --> 00:00:22,000
+Imóveis com fotos reais, paginação e exportação CSV
+
+6
+00:00:22,000 --> 00:00:27,000
+Contratos que atualizam automaticamente o status do imóvel
+
+7
+00:00:27,000 --> 00:00:32,000
+Resumo financeiro dos contratos ativos em um só lugar
